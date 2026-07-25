@@ -1,8 +1,9 @@
 import { Component, type ReactNode } from "react";
-import { EmptyState } from "../../../components/ui";
 
 interface ExcalidrawErrorBoundaryProps {
   children: ReactNode;
+  /** Rendered in place of the crashed canvas — see CanvasFallback. */
+  fallback: ReactNode;
 }
 
 interface ExcalidrawErrorBoundaryState {
@@ -10,10 +11,13 @@ interface ExcalidrawErrorBoundaryState {
 }
 
 /**
- * Guards against @excalidraw/excalidraw throwing at runtime (it ships a
- * preact-compatible build gated by IS_PREACT — vite.config sets that, but
- * we still don't want a canvas bug to take down the whole Solve screen).
- * Falls back to a minimal notice rather than blanking the panel.
+ * Guards against @excalidraw/excalidraw throwing at runtime. In practice it
+ * does: this version throws `import_es6_promise_pool.default is not a
+ * constructor` during scene font loading (a CJS/ESM interop bug in one of
+ * its deps, unrelated to the IS_PREACT flag vite.config already sets),
+ * which cascades into a "Maximum update depth exceeded" crash. Rather than
+ * take down the whole Solve screen, we swap in the minimal canvas-pad
+ * fallback.
  */
 export class ExcalidrawErrorBoundary extends Component<
   ExcalidrawErrorBoundaryProps,
@@ -27,18 +31,10 @@ export class ExcalidrawErrorBoundary extends Component<
 
   componentDidCatch(error: unknown) {
     // eslint-disable-next-line no-console
-    console.error("Excalidraw canvas crashed:", error);
+    console.error("Excalidraw canvas crashed, using fallback pad:", error);
   }
 
   render() {
-    if (this.state.crashed) {
-      return (
-        <EmptyState
-          title="Drawing canvas unavailable"
-          description="The sketch pad hit a runtime error. Your notes below are unaffected."
-        />
-      );
-    }
-    return this.props.children;
+    return this.state.crashed ? this.props.fallback : this.props.children;
   }
 }
