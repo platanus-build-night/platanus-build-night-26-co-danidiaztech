@@ -123,13 +123,13 @@ function Hero({
       </h1>
       <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-text-muted">
         Solve while thinking out loud. Every keystroke and spoken word is timestamped, then
-        replayed as a cognitive timeline — so you can see exactly where the insight landed
+        replayed as a cognitive timeline. You can see exactly where the insight landed
         and what it cost you to get there.
       </p>
       <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
         <Stat label="Problems" value={problemCount === null ? "—" : String(problemCount)} />
         <Stat label="Solved" value={String(solvedCount)} />
-        <Stat label="Sessions analysed" value={String(sessionCount)} />
+        <Stat label="Sessions analyzed" value={String(sessionCount)} />
       </dl>
     </section>
   );
