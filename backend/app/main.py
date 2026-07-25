@@ -11,6 +11,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -75,7 +76,13 @@ def on_startup() -> None:
     from app import models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
-    _auto_seed_if_empty()
+
+    # Seeded off the request path: importing 51 problems and ~1000 test cases
+    # takes ~20s, and startup hooks run *before* uvicorn binds the port — a
+    # blocking seed would leave the health check unanswered long enough for a
+    # platform to call the deploy failed. The app comes up immediately with an
+    # empty problem list and fills in moments later.
+    threading.Thread(target=_auto_seed_if_empty, name="auto-seed", daemon=True).start()
 
 
 @app.get("/api/health")
