@@ -153,12 +153,19 @@ def run_samples(problem: Any, language: str, code: str) -> list[dict[str, Any]]:
 
     ok, compile_err = _compile_if_needed(language, code)
     if not ok:
-        # No fixed field for compiler stderr on RunResult (verdict/time_ms/
-        # stdout/expected only) — surface the excerpt via `stdout` so it's
-        # still visible to the caller, since CE has no meaningful stdout.
+        # `compile_error` carries the compiler stderr excerpt explicitly;
+        # `stdout` keeps the same excerpt for backwards compat with any
+        # caller still reading it off `stdout` (CE has no meaningful stdout
+        # otherwise).
         placeholder = tests or [{"input": "", "expected": ""}]
         return [
-            {"verdict": "CE", "time_ms": 0, "stdout": compile_err, "expected": t["expected"]}
+            {
+                "verdict": "CE",
+                "time_ms": 0,
+                "stdout": compile_err,
+                "expected": t["expected"],
+                "compile_error": compile_err,
+            }
             for t in placeholder
         ]
 

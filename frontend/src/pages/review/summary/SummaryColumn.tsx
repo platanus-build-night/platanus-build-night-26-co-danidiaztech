@@ -75,6 +75,16 @@ export function SummaryColumn({
         <AnalyzeCTA analyzing={analyzing} error={analyzeError} onAnalyze={onAnalyze} />
       ) : (
         <>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+              Cognition analysis
+            </span>
+            <Button variant="ghost" size="sm" onClick={onAnalyze} disabled={analyzing}>
+              {analyzing && <Spinner size="sm" />}
+              {analyzing ? "Re-analyzing…" : "Re-analyze"}
+            </Button>
+          </div>
+          {analyzeError && <p className="text-sm text-danger">{analyzeError}</p>}
           <AhaGapStat analysis={analysis} />
           <BottleneckCard bottleneck={analysis.bottleneck} />
           <StrengthsList strengths={analysis.strengths} />

@@ -96,6 +96,7 @@ class RunResult(BaseModel):
     time_ms: int
     stdout: str
     expected: str
+    compile_error: Optional[str] = None
 
 
 class SubmitRequest(BaseModel):
@@ -163,6 +164,11 @@ class AnalysisResult(BaseModel):
 
 class ProfileOut(BaseModel):
     data: dict[str, Any]
+
+
+class SessionAnalysisOut(BaseModel):
+    result: AnalysisResult
+    created_at: dt.datetime
 
 
 # ----------------------------------------------------------------- Settings --

@@ -6,8 +6,12 @@ import type {
   ProfileOut,
   Recommendation,
   RunResult,
+  SessionAnalysisOut,
   SessionDetail,
   SessionListItem,
+  SettingsOut,
+  SettingsTestResult,
+  SettingsUpdate,
   SubmitResult,
 } from "./types";
 
@@ -93,5 +97,15 @@ export const api = {
   analyzeSession: (sessionId: number) =>
     request<AnalysisResult>(`/sessions/${sessionId}/analyze`, { method: "POST" }),
 
+  getPersistedAnalysis: (sessionId: number) =>
+    request<SessionAnalysisOut>(`/sessions/${sessionId}/analysis`),
+
   getProfile: () => request<ProfileOut>("/profile"),
+
+  getSettings: () => request<SettingsOut>("/settings"),
+
+  updateSettings: (payload: SettingsUpdate) =>
+    request<SettingsOut>("/settings", { method: "PUT", body: JSON.stringify(payload) }),
+
+  testSettings: () => request<SettingsTestResult>("/settings/test", { method: "POST" }),
 };

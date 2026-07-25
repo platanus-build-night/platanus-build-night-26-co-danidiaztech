@@ -19,6 +19,7 @@ interface TestRow {
   time_ms: number;
   stdout: string;
   expected: string;
+  compile_error?: string | null;
 }
 
 function toTestRow(entry: Record<string, unknown>): TestRow {
@@ -27,6 +28,12 @@ function toTestRow(entry: Record<string, unknown>): TestRow {
     time_ms: typeof entry.time_ms === "number" ? entry.time_ms : 0,
     stdout: typeof entry.stdout === "string" ? entry.stdout : "",
     expected: typeof entry.expected === "string" ? entry.expected : "",
+    compile_error:
+      typeof entry.compile_error === "string"
+        ? entry.compile_error
+        : typeof entry.stderr === "string"
+          ? entry.stderr
+          : null,
   };
 }
 
@@ -71,20 +78,29 @@ export function JudgeResultsPanel({ mode, runResults, submitResult, onClose }: J
             <VerdictBadge verdict={row.verdict} />
             <span>{row.time_ms}ms</span>
           </div>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {row.compile_error ? (
             <div>
-              <div className="mb-0.5 text-[11px] font-medium text-text-muted">stdout</div>
-              <pre className="overflow-x-auto rounded bg-surface p-1.5 font-mono text-xs text-text">
-                {row.stdout || " "}
+              <div className="mb-0.5 text-[11px] font-medium text-danger">compiler error</div>
+              <pre className="overflow-x-auto whitespace-pre-wrap rounded border border-danger/30 bg-danger/5 p-1.5 font-mono text-xs text-text">
+                {row.compile_error}
               </pre>
             </div>
-            <div>
-              <div className="mb-0.5 text-[11px] font-medium text-text-muted">expected</div>
-              <pre className="overflow-x-auto rounded bg-surface p-1.5 font-mono text-xs text-text">
-                {row.expected || " "}
-              </pre>
+          ) : (
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <div>
+                <div className="mb-0.5 text-[11px] font-medium text-text-muted">stdout</div>
+                <pre className="overflow-x-auto rounded bg-surface p-1.5 font-mono text-xs text-text">
+                  {row.stdout || " "}
+                </pre>
+              </div>
+              <div>
+                <div className="mb-0.5 text-[11px] font-medium text-text-muted">expected</div>
+                <pre className="overflow-x-auto rounded bg-surface p-1.5 font-mono text-xs text-text">
+                  {row.expected || " "}
+                </pre>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       ))}
     </Panel>

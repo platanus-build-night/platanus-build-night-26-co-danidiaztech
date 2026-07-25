@@ -68,6 +68,7 @@ export interface RunResult {
   time_ms: number;
   stdout: string;
   expected: string;
+  compile_error?: string | null;
 }
 
 export type Verdict = "AC" | "WA" | "TLE" | "RE" | "CE";
@@ -124,4 +125,33 @@ export interface AnalysisResult {
 
 export interface ProfileOut {
   data: Record<string, unknown>;
+}
+
+export interface SessionAnalysisOut {
+  result: AnalysisResult;
+  created_at: string;
+}
+
+export type SettingsProvider = "api" | "plan" | "mock";
+
+export interface SettingsOut {
+  provider: SettingsProvider;
+  model: string;
+  api_key_masked: string | null;
+  oauth_token_masked: string | null;
+  status: string;
+}
+
+export interface SettingsUpdate {
+  provider?: SettingsProvider;
+  api_key?: string;
+  oauth_token?: string;
+  model?: string;
+}
+
+export interface SettingsTestResult {
+  ok: boolean;
+  provider: string;
+  model: string | null;
+  error: string | null;
 }

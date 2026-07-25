@@ -44,6 +44,17 @@ export function ReviewPage() {
         if (!cancelled) setError(e instanceof ApiError ? e.message : "Failed to load session");
       });
 
+    // Rehydration: if this session was already analyzed, render it
+    // immediately — no CTA, no re-running Claude just to view the page.
+    api
+      .getPersistedAnalysis(Number(sessionId))
+      .then((a) => {
+        if (!cancelled) setAnalysis(a.result);
+      })
+      .catch(() => {
+        // 404 (not analyzed yet) is expected and not an error state.
+      });
+
     return () => {
       cancelled = true;
     };
