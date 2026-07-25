@@ -27,6 +27,17 @@ export interface ProblemDetail {
   samples: Sample[];
 }
 
+/** Safe-to-show-before-you-commit subset — no statement/samples/editorial/tags.
+ * Used by the solve pre-flight gate, before a session (and the real
+ * statement) exists. Mirrors backend ProblemMeta. */
+export interface ProblemMeta {
+  id: number;
+  title: string;
+  rating: number | null;
+  time_limit_ms: number;
+  memory_limit_mb: number;
+}
+
 export type SessionStatus = "active" | "finished";
 
 export interface SessionListItem {
@@ -36,6 +47,16 @@ export interface SessionListItem {
   started_at: string;
   ended_at: string | null;
   status: SessionStatus;
+  /** The user's pre-flight choice: did they opt into voice capture?
+   * `false` means "deliberately silent", not "mic failed". */
+  record_voice: boolean;
+}
+
+/** Response shape of POST /sessions — the one place the full problem
+ * statement is handed to the client (see ProblemMeta). */
+export interface SessionCreated {
+  id: number;
+  problem: ProblemDetail;
 }
 
 export interface EventOut {

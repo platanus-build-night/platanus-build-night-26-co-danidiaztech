@@ -35,6 +35,32 @@ export function computeIdleRegions(sortedEvents: EventOut[], thresholdMs: number
   return regions;
 }
 
+/**
+ * Collapses a sorted, deduped list of event times into "steps" for smart-skip
+ * playback: consecutive events closer together than `gapMs` (e.g. throttled
+ * code_snap edits arriving every ~2s) are merged into a single step so a long
+ * typing burst becomes one jump instead of dozens of near-imperceptible
+ * micro-steps. `spanMs` caps how much wall-clock time a single burst may
+ * absorb, so a burst lasting minutes still yields a handful of steps rather
+ * than collapsing to one. Each step is represented by the *last* raw event
+ * time in its burst (the settled state after that burst of activity).
+ */
+export function coalesceEventTimes(times: number[], gapMs: number, spanMs: number): number[] {
+  const sorted = Array.from(new Set(times)).sort((a, b) => a - b);
+  const steps: number[] = [];
+  let i = 0;
+  const n = sorted.length;
+  while (i < n) {
+    let j = i;
+    while (j + 1 < n && sorted[j + 1] - sorted[j] <= gapMs && sorted[j + 1] - sorted[i] <= spanMs) {
+      j += 1;
+    }
+    steps.push(sorted[j]);
+    i = j + 1;
+  }
+  return steps;
+}
+
 export const PHASE_COLORS: Record<string, string> = {
   reading: "#60a5fa", // blue-400
   thinking: "#a78bfa", // violet-400

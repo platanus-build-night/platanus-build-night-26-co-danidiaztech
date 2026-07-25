@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { Marker, Phase } from "../../../lib/types";
 import { formatMs } from "../format";
@@ -18,12 +18,25 @@ interface TimelineBarProps {
   markers: Marker[];
   idleRegions: IdleRegion[];
   runTicks: RunTick[];
+  /** Timestamps of activity events (currently: code_snap) shown as small
+   * ticks so a session's structure reads even when it has no transcript
+   * (hence no markers) and/or the analysis collapsed into one wide phase. */
+  activityTicks: number[];
   onSeek: (ms: number) => void;
 }
 
+const PHASE_LABELS: Record<string, string> = {
+  reading: "Reading",
+  thinking: "Thinking",
+  coding: "Coding",
+  debugging: "Debugging",
+  stuck: "Stuck",
+};
+
 /** Bottom timeline bar: phase-colored segments, aha/hesitation/wrong-turn
- * marker glyphs, dimmed idle/dead-air regions, run/submit ticks, and a
- * draggable scrubber. Full session duration always maps to 100% width. */
+ * marker glyphs, dimmed idle/dead-air regions, activity ticks, run/submit
+ * ticks, a draggable scrubber, and a legend so the colors/glyphs are
+ * interpretable at a glance. Full session duration always maps to 100% width. */
 export function TimelineBar({
   durationMs,
   currentMs,
@@ -31,10 +44,16 @@ export function TimelineBar({
   markers,
   idleRegions,
   runTicks,
+  activityTicks,
   onSeek,
 }: TimelineBarProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
+
+  const phaseLabelsPresent = useMemo(
+    () => Array.from(new Set(phases.map((p) => p.label))),
+    [phases]
+  );
 
   const pct = useCallback(
     (ms: number) => (durationMs > 0 ? Math.min(100, Math.max(0, (ms / durationMs) * 100)) : 0),
@@ -116,6 +135,18 @@ export function TimelineBar({
         />
       </div>
 
+      {activityTicks.length > 0 && (
+        <div aria-hidden className="relative mt-0.5 h-1.5" title="Code activity">
+          {activityTicks.map((t, i) => (
+            <div
+              key={i}
+              className="absolute top-0 h-full w-px bg-text-muted opacity-60"
+              style={{ left: `${pct(t)}%` }}
+            />
+          ))}
+        </div>
+      )}
+
       {runTicks.length > 0 && (
         <div className="relative mt-1 h-3">
           {runTicks.map((r) => (
@@ -150,6 +181,52 @@ export function TimelineBar({
           ))}
         </div>
       )}
+
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-text-muted">
+        {phaseLabelsPresent.map((label) => (
+          <span key={label} className="flex items-center gap-1">
+            <span
+              aria-hidden
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: PHASE_COLORS[label] ?? "var(--color-border)", opacity: 0.8 }}
+            />
+            {PHASE_LABELS[label] ?? label}
+          </span>
+        ))}
+        {idleRegions.length > 0 && (
+          <span className="flex items-center gap-1">
+            <span
+              aria-hidden
+              className="h-2 w-3 rounded-sm bg-[repeating-linear-gradient(45deg,rgba(120,120,120,0.6),rgba(120,120,120,0.6)_2px,transparent_2px,transparent_4px)]"
+            />
+            Idle (no activity 20s+)
+          </span>
+        )}
+        {activityTicks.length > 0 && (
+          <span className="flex items-center gap-1">
+            <span aria-hidden className="h-2 w-px bg-text-muted opacity-60" />
+            Code edit
+          </span>
+        )}
+        {runTicks.length > 0 && (
+          <>
+            <span className="flex items-center gap-1">
+              <span aria-hidden className="h-2 w-2 rounded-sm" style={{ backgroundColor: "var(--color-success)" }} />
+              Run/submit — AC
+            </span>
+            <span className="flex items-center gap-1">
+              <span aria-hidden className="h-2 w-2 rounded-sm" style={{ backgroundColor: "var(--color-danger)" }} />
+              Run/submit — other
+            </span>
+          </>
+        )}
+        {markers.map((m) => m.kind).filter((k, i, arr) => arr.indexOf(k) === i).map((kind) => (
+          <span key={kind} className="flex items-center gap-1">
+            <span aria-hidden>{MARKER_GLYPH[kind] ?? "•"}</span>
+            {kind}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

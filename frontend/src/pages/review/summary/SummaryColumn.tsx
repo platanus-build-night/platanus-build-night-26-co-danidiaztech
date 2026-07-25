@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
-import { marked } from "marked";
+import { useState } from "react";
 import type { AnalysisResult, ProblemDetail, SessionDetail } from "../../../lib/types";
 import { Badge, Button, Card, Spinner } from "../../../components/ui";
 import { formatMs, formatSec } from "../format";
+import { MathMarkdown } from "../../../lib/mathmd";
 
 interface SummaryColumnProps {
   problem: ProblemDetail;
@@ -158,7 +158,7 @@ function BottleneckCard({ bottleneck }: { bottleneck: string }) {
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-warning/10" />
       <div className="relative">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-warning">Bottleneck</h3>
-        <p className="mt-1 text-sm text-text">{bottleneck}</p>
+        <MathMarkdown className="mt-1 [&_p]:mb-0" source={bottleneck} />
       </div>
     </Card>
   );
@@ -173,7 +173,7 @@ function StrengthsList({ strengths }: { strengths: string[] }) {
         {strengths.map((s, i) => (
           <li key={i} className="flex gap-2 text-sm text-text">
             <span className="text-success">+</span>
-            <span>{s}</span>
+            <MathMarkdown className="[&_p]:mb-0" source={s} />
           </li>
         ))}
       </ul>

@@ -38,15 +38,44 @@ class ProblemDetail(BaseModel):
     samples: list[Sample]
 
 
+class ProblemMeta(BaseModel):
+    """Safe-to-show-before-you-commit subset of a problem: no statement,
+    samples, editorial, or tags (tags are a technique spoiler in CP).
+    Used by the solve pre-flight screen, before a session — and therefore
+    the full statement — exists."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    rating: Optional[int] = None
+    time_limit_ms: int
+    memory_limit_mb: int
+
+
 # ---------------------------------------------------------------- Sessions --
 
 class SessionCreate(BaseModel):
     problem_id: int
     language: str
+    # Pre-flight choice: did the user opt into voice capture? Defaults to
+    # False so existing/older clients that don't send it behave as "silent".
+    record_voice: bool = False
 
 
 class SessionCreated(BaseModel):
     id: int
+    # The full statement is only ever handed over once a session exists —
+    # this is the one place the gated pre-flight flow receives it.
+    problem: ProblemDetail
+
+
+class SessionPatch(BaseModel):
+    """Partial update for a session row — currently just `language`, so the
+    dashboard reflects the language the user actually solved in after a
+    mid-session switch (the session row is created once on mount)."""
+
+    language: Optional[str] = None
 
 
 class EventIn(BaseModel):
@@ -77,6 +106,7 @@ class SessionListItem(BaseModel):
     started_at: dt.datetime
     ended_at: Optional[dt.datetime] = None
     status: str
+    record_voice: bool = False
 
 
 class SessionDetail(SessionListItem):

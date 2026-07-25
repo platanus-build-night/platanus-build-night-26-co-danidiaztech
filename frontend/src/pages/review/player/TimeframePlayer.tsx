@@ -14,6 +14,12 @@ import { computeIdleRegions, findIndexAtOrBefore } from "./timelineUtils";
 // pauses between narration lines.
 const IDLE_DISPLAY_THRESHOLD_MS = 20000;
 
+// A session with a single event (or all events packed into a couple of
+// seconds) has nothing to actually play back — one static frame. Rather than
+// render a scrubber/timeline that implies there's a video to watch, show an
+// honest "not enough activity" state.
+const MIN_REPLAYABLE_SPAN_MS = 2000;
+
 interface TimeframePlayerProps {
   session: SessionDetail;
   analysis: AnalysisResult | null;
@@ -102,6 +108,18 @@ export function TimeframePlayer({ session, analysis }: TimeframePlayerProps) {
     );
   }
 
+  const activitySpanMs = sortedEvents[sortedEvents.length - 1].t_ms - sortedEvents[0].t_ms;
+  if (sortedEvents.length < 2 || activitySpanMs < MIN_REPLAYABLE_SPAN_MS) {
+    return (
+      <EmptyState
+        title="Not enough activity to replay"
+        description={`This session only recorded ${sortedEvents.length} event${
+          sortedEvents.length === 1 ? "" : "s"
+        } — too little to reconstruct a playback timeline.`}
+      />
+    );
+  }
+
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
       <div className="min-h-0 min-w-0 flex-1">
@@ -124,6 +142,7 @@ export function TimeframePlayer({ session, analysis }: TimeframePlayerProps) {
           markers={analysis?.markers ?? []}
           idleRegions={idleRegions}
           runTicks={runTicks}
+          activityTicks={codeTimes}
           onSeek={engine.seek}
         />
         <PlayerControls

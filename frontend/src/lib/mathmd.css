@@ -1,0 +1,27 @@
+/*
+ * KaTeX ships hard-coded black glyph colors, which reads as an unstyled
+ * "foreign" box against our themed prose (and is unreadable in dark mode).
+ * Force it to inherit the surrounding text color instead, and keep long
+ * expressions from blowing out the layout.
+ */
+.mathmd .katex {
+  color: inherit;
+  font-size: 1.02em;
+}
+
+.mathmd .katex-display {
+  margin: 0.75em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 2px;
+}
+
+.mathmd .katex-html {
+  color: inherit;
+}
+
+/* KaTeX error fallback (throwOnError:false renders the raw source in red) —
+   keep it legible instead of a jarring pure-red flash on dark backgrounds. */
+.mathmd .katex-error {
+  color: var(--color-danger);
+}

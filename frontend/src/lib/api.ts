@@ -3,10 +3,12 @@ import type {
   EventIn,
   ProblemDetail,
   ProblemListItem,
+  ProblemMeta,
   ProfileOut,
   Recommendation,
   RunResult,
   SessionAnalysisOut,
+  SessionCreated,
   SessionDetail,
   SessionListItem,
   SettingsOut,
@@ -61,12 +63,18 @@ export const api = {
 
   getProblem: (id: number) => request<ProblemDetail>(`/problems/${id}`),
 
+  /** Pre-flight-safe subset (no statement/samples/editorial/tags) — the
+   * only thing the solve page may fetch before a session exists. */
+  getProblemMeta: (id: number) => request<ProblemMeta>(`/problems/${id}/meta`),
+
   getRecommendations: () => request<Recommendation[]>("/recommendations"),
 
-  createSession: (problem_id: number, language: string) =>
-    request<{ id: number }>("/sessions", {
+  /** The one call that hands back the full problem statement — gated
+   * behind the user's pre-flight recording choice. */
+  createSession: (problem_id: number, language: string, record_voice: boolean) =>
+    request<SessionCreated>("/sessions", {
       method: "POST",
-      body: JSON.stringify({ problem_id, language }),
+      body: JSON.stringify({ problem_id, language, record_voice }),
     }),
 
   postEvents: (sessionId: number, events: EventIn[]) =>
@@ -77,6 +85,12 @@ export const api = {
 
   finishSession: (sessionId: number) =>
     request<{ ok: boolean }>(`/sessions/${sessionId}/finish`, { method: "POST" }),
+
+  patchSessionLanguage: (sessionId: number, language: string) =>
+    request<SessionListItem>(`/sessions/${sessionId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ language }),
+    }),
 
   listSessions: () => request<SessionListItem[]>("/sessions"),
 

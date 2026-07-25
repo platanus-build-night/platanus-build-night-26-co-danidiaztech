@@ -70,6 +70,10 @@ class SessionModel(Base):
         DateTime(timezone=True), nullable=True
     )
     status: Mapped[str] = mapped_column(String, default="active")  # active|finished
+    # User's pre-flight choice, captured at session creation: did they opt
+    # into voice capture? False also means "deliberately silent" for
+    # downstream analysis, distinct from "mic failed silently".
+    record_voice: Mapped[bool] = mapped_column(Boolean, default=False)
 
     problem: Mapped["Problem"] = relationship(back_populates="sessions")
     events: Mapped[list["Event"]] = relationship(

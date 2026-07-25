@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.models import Problem, Submission
-from app.schemas import ProblemDetail, ProblemListItem
+from app.schemas import ProblemDetail, ProblemListItem, ProblemMeta
 
 router = APIRouter(tags=["problems"])
 
@@ -44,6 +44,17 @@ def list_problems(
             )
         )
     return out
+
+
+@router.get("/problems/{problem_id}/meta", response_model=ProblemMeta)
+def get_problem_meta(problem_id: int, db: Session = Depends(get_db)) -> Problem:
+    """Safe-to-show-before-you-commit metadata for the solve pre-flight
+    screen: no statement_md, samples, editorial_md, or tags (spoilers).
+    The full statement is only obtainable via POST /sessions."""
+    problem = db.get(Problem, problem_id)
+    if problem is None:
+        raise HTTPException(status_code=404, detail="problem not found")
+    return problem
 
 
 @router.get("/problems/{problem_id}", response_model=ProblemDetail)

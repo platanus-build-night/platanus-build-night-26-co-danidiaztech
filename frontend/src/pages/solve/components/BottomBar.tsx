@@ -1,10 +1,13 @@
 import { Button, Spinner } from "../../../components/ui";
 import { cn } from "../../../lib/cn";
+import type { MicStatus } from "../hooks/useSpeechRecognition";
 
 interface BottomBarProps {
   elapsed: string;
-  micSupported: boolean;
-  listening: boolean;
+  micStatus: MicStatus;
+  micErrorMessage: string | null;
+  micSilentWarning: boolean;
+  micWordsCaptured: number;
   liveTranscript: string;
   onToggleMic: () => void;
   onRun: () => void;
@@ -15,10 +18,26 @@ interface BottomBarProps {
   finishing: boolean;
 }
 
+const MIC_DOT_CLASS: Record<MicStatus, string> = {
+  idle: "bg-text-muted",
+  listening: "animate-pulse bg-accent-contrast",
+  error: "bg-white",
+  unsupported: "bg-text-muted",
+};
+
+const MIC_LABEL: Record<MicStatus, string> = {
+  idle: "Mic off",
+  listening: "Listening",
+  error: "Mic error",
+  unsupported: "Mic unavailable",
+};
+
 export function BottomBar({
   elapsed,
-  micSupported,
-  listening,
+  micStatus,
+  micErrorMessage,
+  micSilentWarning,
+  micWordsCaptured,
   liveTranscript,
   onToggleMic,
   onRun,
@@ -28,36 +47,48 @@ export function BottomBar({
   submitting,
   finishing,
 }: BottomBarProps) {
+  const micVariant = micStatus === "listening" ? "primary" : micStatus === "error" ? "danger" : "secondary";
+
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-border bg-surface px-4 py-3">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <Button
-          variant={listening ? "primary" : "secondary"}
+          variant={micVariant}
           size="sm"
           onClick={onToggleMic}
-          disabled={!micSupported}
-          aria-pressed={listening}
-          title={micSupported ? undefined : "Speech recognition isn't supported in this browser"}
+          disabled={micStatus === "unsupported"}
+          aria-pressed={micStatus === "listening"}
+          title={micStatus === "error" && micErrorMessage ? micErrorMessage : undefined}
         >
-          <span
-            className={cn(
-              "h-2 w-2 rounded-full",
-              listening ? "animate-pulse bg-accent-contrast" : "bg-text-muted"
-            )}
-          />
-          {listening ? "Listening" : "Mic off"}
+          <span className={cn("h-2 w-2 rounded-full", MIC_DOT_CLASS[micStatus])} />
+          {MIC_LABEL[micStatus]}
         </Button>
 
         <div className="min-w-0 flex-1 text-xs">
-          {!micSupported && (
-            <span className="text-text-muted">Speech recognition isn't supported in this browser.</span>
-          )}
-          {micSupported && listening && (
-            <span className="truncate text-text-muted">
-              {liveTranscript || "Listening for your reasoning…"}
+          {micStatus === "unsupported" && (
+            <span className="text-text-muted">
+              Speech recognition isn't supported in this browser — try Chrome or Edge.
             </span>
           )}
-          {micSupported && !listening && (
+          {micStatus === "error" && (
+            <span className="text-danger" role="alert">
+              {micErrorMessage}
+            </span>
+          )}
+          {micStatus === "listening" && (
+            <div className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate text-text-muted">
+                {liveTranscript || "Listening for your reasoning…"}
+              </span>
+              <span className="flex items-center gap-2 text-[11px] text-text-muted">
+                <span>words captured: {micWordsCaptured}</span>
+                {micSilentWarning && (
+                  <span className="text-warning">Mic is on but nothing heard yet</span>
+                )}
+              </span>
+            </div>
+          )}
+          {micStatus === "idle" && (
             <span className="text-text-muted">Thinking out loud improves your analysis.</span>
           )}
         </div>
