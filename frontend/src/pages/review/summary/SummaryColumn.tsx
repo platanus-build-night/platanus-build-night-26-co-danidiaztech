@@ -189,8 +189,8 @@ function DrillsList({ drills }: { drills: AnalysisResult["drills"] }) {
       <ul className="mt-2 space-y-3">
         {drills.map((d, i) => (
           <li key={i}>
-            <p className="text-sm font-medium text-text">{d.title}</p>
-            <p className="text-sm text-text-muted">{d.why}</p>
+            <MathMarkdown className="text-sm font-medium text-text [&_p]:mb-0" source={d.title} />
+            <MathMarkdown className="[&_p]:mb-0 [&_p]:text-text-muted" source={d.why} />
           </li>
         ))}
       </ul>
@@ -200,7 +200,6 @@ function DrillsList({ drills }: { drills: AnalysisResult["drills"] }) {
 
 function EditorialSection({ editorialMd }: { editorialMd: string | null }) {
   const [open, setOpen] = useState(false);
-  const html = useMemo(() => (editorialMd ? (marked.parse(editorialMd) as string) : ""), [editorialMd]);
 
   if (!editorialMd) return null;
 
@@ -216,10 +215,9 @@ function EditorialSection({ editorialMd }: { editorialMd: string | null }) {
         <span className="text-text-muted">{open ? "−" : "+"}</span>
       </button>
       {open && (
-        // eslint-disable-next-line react/no-danger -- editorial_md is app-authored content, not user input
-        <div
-          className="prose prose-sm mt-3 max-w-none text-text [&_a]:text-accent [&_code]:text-accent [&_h1]:text-base [&_h2]:text-sm [&_p]:text-text-muted [&_li]:text-text-muted"
-          dangerouslySetInnerHTML={{ __html: html }}
+        <MathMarkdown
+          className="mt-3 [&_a]:text-accent [&_code]:text-accent [&_li]:text-text-muted [&_p]:text-text-muted"
+          source={editorialMd}
         />
       )}
     </Card>
@@ -242,7 +240,9 @@ function EditorialGapSection({ gap }: { gap: AnalysisResult["editorialGap"] }) {
         {rows.map((r) => (
           <div key={r.label}>
             <dt className="text-xs font-medium text-accent">{r.label}</dt>
-            <dd className="mt-0.5 text-sm text-text-muted">{r.value}</dd>
+            <dd className="mt-0.5">
+              <MathMarkdown className="[&_p]:mb-0 [&_p]:text-text-muted" source={r.value} />
+            </dd>
           </div>
         ))}
       </dl>

@@ -44,13 +44,15 @@ Every prose sentence must be anchored to at least one of:
 - a timestamp taken from the evidence — written in prose as m:ss (232s is 3:52),
 - a verbatim transcript quote,
 - a concrete code artifact: a name from their code, a deleted block, a rewrite count, a verdict.
-A sentence with no anchor gets deleted, not softened. Never round a timestamp to look \
-tidy. Never assert what the tape doesn't show; an inference must be one step from a \
-fact you cite — "you deleted 11 lines at 3:34 and typed a different loop, so that \
-first attempt was abandoned, not refined".
+A sentence with no anchor gets deleted, not softened. Every number you cite — seconds, \
+character counts, line counts, mastery — must appear in the evidence. Never round a \
+timestamp to look tidy and never estimate a count. Never assert what the tape doesn't \
+show; an inference must be one step from a fact you cite — "you deleted 11 lines at \
+3:34 and typed a different loop, so that first attempt was abandoned, not refined".
 
 ## One idea, one home — every field does a DIFFERENT job
-- `summary`: what happened, in order. The arc, not the diagnosis, not advice.
+- `summary`: the arc, in order — what they tried, what happened, how it ended. Two \
+sentences, each under 25 words. Second person. No diagnosis, no advice, no problem recap.
 - `phases`/`markers`: where it happened.
 - `bottleneck`: the diagnosis. It appears here and NOWHERE else.
 - `strengths`: observations.
@@ -77,6 +79,9 @@ problem.
 Second person. Sentences under 25 words. Break at the period, not the em dash — one em \
 dash per field at most, and no stacked parentheticals. Say the uncomfortable thing \
 plainly; that is what they came here for.
+Two accuracy habits: a `run` tests the samples and a `submit` is the real attempt, so \
+never call one the other; and profile masteries are 0-1, so write them as whole \
+percents (0.5236 becomes 52%, never 0.5236 or 52.36%).
 
 ## The bottleneck — the deliverable
 One sentence, under 35 words, naming the ONE trainable weakness that cost the most on \
@@ -114,9 +119,11 @@ abandoned, using the deleted code;
 instead of from the statement;
 - a long idle with no keystrokes is thinking or stalling, and the code that follows \
 tells you which.
-You may mention the missing mic at most ONCE, as a forward-looking nudge inside \
-`profileAdvice` or one drill. Never write "presumably", "without audio", "no verbal cue \
-available", or any variant. Be exactly as confident as you would be with a transcript.
+Saying nothing about the mic is the default. At most once, and only if it earns the \
+words, you may nudge them to turn it on next time — as its own short clause in \
+`profileAdvice` or one drill, never as a caveat on a finding. Never write "presumably", \
+"without audio", "no verbal cue available", or any variant. Be exactly as confident as \
+you would be with a transcript.
 
 ## Strengths, drills, editorial gap
 - `strengths`: 1-3 plain strings, each an observation with an anchor, and none of them \
@@ -132,8 +139,12 @@ get 6 in a row without running anything." Bad titles: "Practice binary search", 
 session that makes the drill necessary — evidence, not the diagnosis again.
 - `editorialGap` is comparative and concrete:
   - `missedInsight`: the thing the editorial knows from line one that they didn't. \
-Never open with "none": if they did find the intended solution, lead with what their \
-route cost that the editorial's didn't, step by step.
+Landing on the same final code does NOT mean nothing was missed — the editorial has a \
+proof and they had a guess, and that difference is what cost them the time. Write that \
+difference. Example, when the code matched: "The editorial proves consecutive integers \
+work in one line: the gap is 1 and a[i-1] >= 2, so it cannot divide. You had no proof, \
+so at 3:24 you were writing a runtime divisibility check to find a construction the \
+argument hands you for free." Never open this field with "none", "no" or "nothing".
   - `fasterPath`: the shortcut that was actually available to them at a specific moment \
 in this recording. Name that moment and what they already had in hand at it.
   - `profileAdvice`: what to do next, citing a real tag and its mastery from the profile \
@@ -243,9 +254,11 @@ def _render_rhythm(rhythm: dict[str, Any]) -> str:
 def _render_outcomes(outcomes: list[dict[str, Any]]) -> str:
     if not outcomes:
         return "(never ran or submitted anything)"
-    lines = []
+    lines = ["a `run` only tests the samples; a `submit` is the real attempt"]
     for o in outcomes:
-        bits = [_stamp(o["sec"]), o.get("kind", "?"), str(o.get("verdict"))]
+        kind = o.get("kind", "?")
+        label = "RUN (samples)" if kind == "run" else "SUBMIT (real attempt)"
+        bits = [_stamp(o["sec"]), label, str(o.get("verdict"))]
         if o.get("detail"):
             bits.append(f"({o['detail']})")
         if o.get("since_prev_sec") is not None:
