@@ -18,14 +18,18 @@ export function AboutPage() {
         <ThemeToggle />
       </header>
 
-      <h1 className="text-3xl font-semibold tracking-tight text-text">
-        Every judge grades your answer.
+      {/* Same construction as the dashboard hero: muted setup, full-contrast
+          payoff carrying the brand. */}
+      <h1 className="max-w-2xl text-3xl font-semibold leading-[1.15] tracking-tight">
+        <span className="text-text-muted">Every judge grades your answer.</span>
         <br />
-        <span className="text-text-muted">This one grades your thinking.</span>
+        <span className="text-text">
+          Watch<span className="text-accent">Me</span>Code grades your thinking.
+        </span>
       </h1>
-      <p className="mt-4 max-w-xl text-sm leading-relaxed text-text-muted">
-        WatchMeCode records how you solve — then replays it and tells you what actually
-        slowed you down.
+      <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-text-muted">
+        It records how you solve — then replays it and tells you what actually slowed you
+        down.
       </p>
 
       <figure className="mt-10">

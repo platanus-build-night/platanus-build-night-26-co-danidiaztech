@@ -110,15 +110,21 @@ function Hero({
 }) {
   return (
     <section className="mb-10 border-b border-border pb-8">
-      <h1 className="max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-text sm:text-4xl">
-        Codeforces grades your answer.
+      {/* The setup line is muted and the payoff carries full contrast — the
+          brand name is the punchline, so it shouldn't be the greyed half. */}
+      {/* text-balance keeps the two clauses from orphaning a single word onto a
+          third line as the viewport narrows. */}
+      <h1 className="max-w-4xl text-pretty text-3xl font-semibold leading-[1.15] tracking-tight sm:text-[2.4rem]">
+        <span className="text-text-muted">Codeforces grades your answer.</span>
         <br />
-        <span className="text-text-muted">This grades your thinking.</span>
+        <span className="text-text">
+          Watch<span className="text-accent">Me</span>Code grades your thinking.
+        </span>
       </h1>
-      <p className="mt-3 max-w-xl text-sm leading-relaxed text-text-muted">
-        Solve a problem while thinking out loud. Every keystroke and spoken word is
-        timestamped, then replayed as a cognitive timeline — so you can see where the
-        insight landed and what it cost you to get there.
+      <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-text-muted">
+        Solve while thinking out loud. Every keystroke and spoken word is timestamped, then
+        replayed as a cognitive timeline — so you can see exactly where the insight landed
+        and what it cost you to get there.
       </p>
       <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
         <Stat label="Problems" value={problemCount === null ? "—" : String(problemCount)} />
