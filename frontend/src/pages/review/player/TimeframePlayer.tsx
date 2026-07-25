@@ -103,8 +103,8 @@ export function TimeframePlayer({ session, analysis }: TimeframePlayerProps) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3">
-      <div className="min-h-0 flex-1">
+    <div className="flex h-full min-h-0 min-w-0 flex-col gap-3">
+      <div className="min-h-0 min-w-0 flex-1">
         {codeSnaps.length > 0 ? (
           <CodePane code={currentCode} language={session.language} theme={theme} />
         ) : (
@@ -112,11 +112,11 @@ export function TimeframePlayer({ session, analysis }: TimeframePlayerProps) {
         )}
       </div>
 
-      <div className="shrink-0 border-t border-border pt-2">
+      <div className="min-w-0 shrink-0 border-t border-border pt-2">
         <TranscriptStrip segments={transcripts} currentMs={engine.currentMs} onSeek={engine.seek} />
       </div>
 
-      <div className="shrink-0 space-y-2 border-t border-border pt-3">
+      <div className="min-w-0 shrink-0 space-y-2 border-t border-border pt-3">
         <TimelineBar
           durationMs={durationMs}
           currentMs={engine.currentMs}

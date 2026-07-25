@@ -40,7 +40,11 @@ export function PlayerControls({
         5s &raquo;
       </Button>
 
-      <div className="flex items-center gap-0.5 rounded-lg border border-border p-0.5">
+      <span className="font-mono text-xs text-text-muted">
+        {formatMs(currentMs)} / {formatMs(durationMs)}
+      </span>
+
+      <div className="ml-auto flex items-center gap-0.5 rounded-lg border border-border p-0.5">
         {SPEEDS.map((s) => (
           <button
             key={s}
@@ -62,7 +66,7 @@ export function PlayerControls({
         role="switch"
         aria-checked={smartSkip}
         onClick={onToggleSmartSkip}
-        className="ml-auto flex items-center gap-2 text-xs text-text-muted"
+        className="flex items-center gap-2 text-xs text-text-muted"
       >
         <span>Smart-skip</span>
         <span
@@ -79,10 +83,6 @@ export function PlayerControls({
           />
         </span>
       </button>
-
-      <span className="font-mono text-xs text-text-muted">
-        {formatMs(currentMs)} / {formatMs(durationMs)}
-      </span>
     </div>
   );
 }

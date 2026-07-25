@@ -84,7 +84,7 @@ export function ReviewPage() {
       )}
 
       {session && problem && (
-        <div className="flex min-h-0 flex-1 flex-col gap-4 pb-6 lg:flex-row">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 pb-6 lg:flex-row">
           <div className="min-h-0 overflow-y-auto pr-1 lg:w-[360px] lg:shrink-0">
             <SummaryColumn
               problem={problem}
@@ -96,8 +96,12 @@ export function ReviewPage() {
             />
           </div>
 
-          <div className="min-h-0 flex-1">
-            <Panel title="Timeframe player" className="h-full" bodyClassName="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 min-w-0 flex-1">
+            <Panel
+              title="Timeframe player"
+              className="h-full min-w-0"
+              bodyClassName="flex min-h-0 min-w-0 flex-1 flex-col"
+            >
               <TimeframePlayer session={session} analysis={analysis} />
             </Panel>
           </div>

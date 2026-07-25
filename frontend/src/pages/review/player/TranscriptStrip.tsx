@@ -32,7 +32,7 @@ export function TranscriptStrip({ segments, currentMs, onSeek }: TranscriptStrip
   }
 
   return (
-    <div className="flex gap-2 overflow-x-auto px-1 py-1" role="list" aria-label="Transcript">
+    <div className="flex min-w-0 gap-2 overflow-x-auto px-1 py-1" role="list" aria-label="Transcript">
       {segments.map((seg, i) => {
         const active = i === activeIdx;
         return (
