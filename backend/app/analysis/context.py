@@ -261,23 +261,38 @@ def solve_rhythm(
 ) -> dict[str, Any]:
     """The pacing numbers a coach would check first, precomputed.
 
-    Every one of these is a question the model would otherwise have to answer
-    by eyeballing timestamps: how long before code appeared, how long that
-    code sat untested, how much of the session was spent after the first
-    failure, how much rewriting happened.
+    Deliberately includes the *payoff* of the thinking time, not just its
+    length: how much of the first implementation survived to the first test.
+    Time before the first keystroke is planning, and the only honest way to
+    judge planning is by the code it produced — so both numbers travel
+    together and the model never gets one without the other.
     """
     first_code = evo.get("first_code_sec")
     first_try = outcomes[0]["sec"] if outcomes else None
     failures = [o for o in outcomes if o["verdict"] not in ("AC", "unknown")]
     first_ac = next((o["sec"] for o in outcomes if o["verdict"] == "AC"), None)
+    rewrites = evo.get("rewrites") or []
+    before_first_test = [r for r in rewrites if first_try is None or r["to_sec"] <= first_try]
+
+    # The longest stretch with nothing recorded. This is planning time, and the
+    # only honest way to price it is the code that came out the other side —
+    # which is why it ships next to the rewrite counts, never on its own.
+    quiet: dict[str, Any] | None = None
+    secs = [round(e.get("t_ms", 0) / 1000) for e in sorted(events, key=lambda e: e.get("t_ms", 0))]
+    for a, b in zip(secs, secs[1:]):
+        if b - a > 20 and (quiet is None or b - a > quiet["seconds"]):
+            quiet = {"from_sec": a, "to_sec": b, "seconds": b - a}
+
     out: dict[str, Any] = {
         "duration_sec": duration,
-        "first_code_sec": first_code,
+        "first_keystroke_sec": first_code,
+        "longest_quiet_span": quiet,
         "first_run_or_submit_sec": first_try,
-        "silent_start_sec": first_code,
-        "code_written_before_first_test_sec": (
+        "implementation_time_before_first_test_sec": (
             None if first_code is None or first_try is None else first_try - first_code
         ),
+        "rewrites_before_first_test": len(before_first_test),
+        "discards_before_first_test": len([r for r in before_first_test if r["discarded"]]),
         "first_failure_sec": failures[0]["sec"] if failures else None,
         "seconds_after_first_failure": (
             None if not failures else duration - failures[0]["sec"]

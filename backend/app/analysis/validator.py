@@ -69,6 +69,14 @@ def _extract_json_object(text: str) -> dict[str, Any]:
     return parsed
 
 
+PHASE_LABELS = ("reading", "thinking", "coding", "debugging", "stuck")
+MARKER_KINDS = ("aha", "hesitation", "wrong-turn")
+# The model occasionally reaches for a marker kind as a phase label. `schemas.Phase`
+# types these as plain strings, so nothing else catches it, and the review player
+# colours phases by label — an unknown one renders as a hole in the timeline.
+_PHASE_ALIASES = {"wrong-turn": "coding", "aha": "thinking", "hesitation": "thinking"}
+
+
 def validate_analysis(raw: str | dict[str, Any]) -> dict[str, Any]:
     """Parse + validate + normalise into the contract's Analysis JSON shape."""
     data = raw if isinstance(raw, dict) else _extract_json_object(raw)
@@ -76,6 +84,13 @@ def validate_analysis(raw: str | dict[str, Any]) -> dict[str, Any]:
         result = AnalysisResult.model_validate(data)
     except ValidationError as exc:
         raise AnalysisFormatError(f"analysis failed schema validation: {exc}") from exc
+
+    for phase in result.phases:
+        if phase.label not in PHASE_LABELS:
+            phase.label = _PHASE_ALIASES.get(phase.label, "coding")
+    for marker in result.markers:
+        if marker.kind not in MARKER_KINDS:
+            marker.kind = "hesitation"
 
     # The Aha-Gap is the product's headline stat — keep it arithmetically
     # honest rather than trusting the model's subtraction.

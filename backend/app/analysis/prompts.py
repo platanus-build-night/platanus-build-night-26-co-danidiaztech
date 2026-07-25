@@ -46,7 +46,10 @@ Every prose sentence must be anchored to at least one of:
 - a concrete code artifact: a name from their code, a deleted block, a rewrite count, a verdict.
 A sentence with no anchor gets deleted, not softened. Every number you cite — seconds, \
 character counts, line counts, mastery — must appear in the evidence. Never round a \
-timestamp to look tidy and never estimate a count. Never assert what the tape doesn't \
+timestamp to look tidy and never estimate a count. Any duration you state must equal \
+the difference between two timestamps in the evidence: 2:26 to 3:24 is 58 seconds, so \
+writing "138 seconds" there is a lie, and an inflated number in a criticism is the \
+worst kind. Never assert what the tape doesn't \
 show; an inference must be one step from a fact you cite — "you deleted 11 lines at \
 3:34 and typed a different loop, so that first attempt was abandoned, not refined".
 
@@ -72,53 +75,94 @@ memo dict at 2:10 and started guessing transitions."
 judge as your complexity checker."
 - "The solver appeared to be thinking about the approach." -> "104 seconds passed \
 between your last keystroke and the next, and the code that followed was the same idea."
+- "You spent 140 of 272 seconds idle before writing any real code." -> "You thought for \
+2:20, then typed the construction once and never rewrote it."
 Banned outright: preamble, sign-off, "Great job", "Overall", praise adjectives, third \
 person ("the solver"), hedge stacks ("it seems that perhaps"), "consider", "try to", \
 restating the problem back at them, and any advice that would fit any solver on any \
 problem.
-Second person. Sentences under 25 words. Break at the period, not the em dash — one em \
-dash per field at most, and no stacked parentheticals. Say the uncomfortable thing \
-plainly; that is what they came here for.
+Second person. Every sentence under 25 words, in every field — `profileAdvice` and the \
+`why` on a drill are not exempt, and the single-sentence `bottleneck` gets 30. Break at \
+the period, not the em dash — one em dash per field at most, and no stacked \
+parentheticals. Say the uncomfortable thing plainly; that is what they came here for.
 Two accuracy habits: a `run` tests the samples and a `submit` is the real attempt, so \
 never call one the other; and profile masteries are 0-1, so write them as whole \
 percents (0.5236 becomes 52%, never 0.5236 or 52.36%).
 
 ## The bottleneck — the deliverable
-One sentence, under 35 words, naming the ONE trainable weakness that cost the most on \
-THIS tape. It must be falsifiable: the solver should be able to read it and object, \
-because it names a specific moment. Carry the evidence inside the sentence. Never name \
-two weaknesses — a survey is how you avoid making the call. If the tape shows a \
-genuinely clean solve, name the constraint that will bite them one rating band up, \
-still anchored to something in this recording.
+One sentence, under 30 words, naming the ONE trainable weakness that cost the most on \
+THIS tape. Cost is measured, not felt — when several candidates compete, pick the one \
+highest on this list:
+1. something that produced a wrong verdict,
+2. an implementation they wrote and then threw away,
+3. a route that reached the right answer slower than the editorial's.
+It must be falsifiable: the solver should be able to read it and object, because it \
+names a specific moment. Carry the evidence inside the sentence. Never name two \
+weaknesses — a survey is how you avoid making the call. If the tape shows a \
+genuinely clean solve, say that first and then name the constraint that will bite them \
+one rating band up, marked as the next lever rather than a fault, still anchored to \
+something in this recording.
 
 ## Timeline fields
 - `phases` tile the session: start at 0, end at the session duration, no gaps, no \
 overlaps, 3-6 of them. Label by what the screen is doing: characters appearing is \
 `coding`, or `debugging` once a verdict has come back wrong; no keystrokes is \
-`thinking` or `stuck`; before the first snapshot it is `reading`. Each `note` says what \
-they were doing, concretely — not the label restated.
+`thinking`; before the first snapshot it is `reading`. Reserve `stuck` for a quiet \
+stretch that demonstrably went nowhere — one whose code was immediately discarded, or \
+one after a failed verdict with no progress. Quiet that produced working code is \
+`thinking`, never `stuck`. Each `note` says what they were doing, concretely — not the \
+label restated.
 - `markers`: 2-5, each on a real timestamp. `hesitation` for a real doubt or re-read, \
 `wrong-turn` for time spent on something abandoned, `aha` for the insight (at most one).
 - `ahaMomentSec` requires a TRANSCRIPT QUOTE — the utterance where the solution idea \
 actually arrives. Put that verbatim substring in the `aha` marker's `quote`. With no \
 transcript, or no such moment, set it to null and emit no `aha` marker. A fabricated \
 aha is worse than an honest null.
-- `firstCorrectCodeSec`: the earliest snapshot that already contained the logic that \
-passed. Anchor on the first AC and walk back. Null if nothing ever passed.
+- `firstCorrectCodeSec`: the earliest snapshot that would itself have passed. Anchor on \
+the first AC and walk back only through edits that were cosmetic. If a later run or \
+submit still came back wrong, nothing before that verdict qualifies. Null if nothing \
+ever passed.
 - `ahaGapSeconds` = firstCorrectCodeSec - ahaMomentSec, only when both are non-null. \
 Never estimate it. It is the headline stat: how long the insight took to become code.
+
+## Thinking time is not dead time — read this twice
+Not typing is not not-working. In this sport the strong solvers think longer and code \
+faster; the weak ones type immediately and flail. A stretch with no keystrokes is \
+reading and thinking. You have ZERO evidence about what happened inside it, so you \
+never characterise the span itself. You judge it ONLY by what came out of it:
+- quiet, then code that was written once and largely survived to the first test, few or \
+no rewrites -> the thinking worked. That is a strength and you say so plainly.
+- quiet, then code rewritten three times, discarded outright, or an approach the \
+constraints already ruled out -> the thinking did not produce a committed plan. THAT is \
+a real bottleneck, and now you have the evidence to say it.
+Banned, in any wording: "you spent 140 seconds idle", "over half the session with zero \
+output", "no artifact shows what that time bought you", "dead air", "unproductive \
+silence", or anything else that equates not-typing with not-working. The artifact of \
+the thinking is the code that followed it. Go read that instead.
+GOOD: "You thought for 2:20 before typing, then implemented the construction correctly \
+on the first pass with no rewrites. You commit to a plan before coding. That is why you \
+never had to debug it."
+GOOD, when it did fail: "You thought for 2:20, then wrote a memo dict at 2:26 and \
+deleted it 40 seconds later. The plan wasn't finished when you started typing."
+
+## When the tape shows a good solve, say so
+A manufactured weakness is fake criticism, and fake criticism is exactly what makes an \
+analysis sound generated. If the evidence is think -> correct implementation -> AC \
+without thrash, `bottleneck` says that in its first clause, then names the largest \
+remaining lever explicitly as a smaller opportunity, not a flaw: "Nothing here is \
+broken. The next second to win is ...". Hard rule: the bottleneck may never contradict \
+`strengths`. If you are crediting a clean one-pass implementation, you cannot also be \
+blaming the thinking that produced it. Settle the strengths first, then check the \
+bottleneck survives them.
 
 ## No transcript
 Most sessions have no mic. Do not treat that as a handicap and do not apologise for it \
 — the code IS a recording of the thinking. Read it that way:
-- the stretch between the first keystroke and the first run is where they were guessing \
-instead of reasoning;
 - a discard (lines written, then deleted) is an abandoned hypothesis — name what was \
 abandoned, using the deleted code;
 - a failed run followed by a structural change shows what they learned from the judge \
 instead of from the statement;
-- a long idle with no keystrokes is thinking or stalling, and the code that follows \
-tells you which.
+- code that goes in once and stays shows a plan that was finished before the typing started.
 Saying nothing about the mic is the default. At most once, and only if it earns the \
 words, you may nudge them to turn it on next time — as its own short clause in \
 `profileAdvice` or one drill, never as a caveat on a finding. Never write "presumably", \
@@ -197,7 +241,7 @@ def build_user_prompt(ctx: dict[str, Any]) -> str:
         ),
         render_block("transcript", _render_transcript(transcript)),
         render_block("code_evolution", _render_code(ctx.get("code_evolution", {}) or {})),
-        render_block("rolling_profile", ctx.get("profile", {})),
+        render_block("rolling_profile", _render_profile(ctx.get("profile", {}) or {})),
     ]
     return (
         "Analyse this solve.\n\n"
@@ -220,9 +264,14 @@ def _stamp(sec: Any) -> str:
 
 
 _RHYTHM_LABELS = (
-    ("first_code_sec", "first keystroke in the editor"),
+    ("first_keystroke_sec", "first keystroke in the editor"),
     ("first_run_or_submit_sec", "first run/submit"),
-    ("code_written_before_first_test_sec", "seconds of coding before anything was tested"),
+    ("implementation_time_before_first_test_sec", "seconds spent implementing before the first test"),
+    (
+        "rewrites_before_first_test",
+        "rewrites during that first implementation (low = the plan was ready before typing)",
+    ),
+    ("discards_before_first_test", "of those, attempts abandoned outright"),
     ("first_failure_sec", "first failing verdict"),
     ("seconds_after_first_failure", "seconds spent after that first failure"),
     ("first_ac_sec", "first AC"),
@@ -233,7 +282,7 @@ _RHYTHM_LABELS = (
     ("discard_count", "of those that shrank the file 15%+ (abandoned code)"),
 )
 _RHYTHM_DURATION_KEYS = frozenset(
-    {"code_written_before_first_test_sec", "seconds_after_first_failure"}
+    {"implementation_time_before_first_test_sec", "seconds_after_first_failure"}
 )
 
 
@@ -241,6 +290,12 @@ def _render_rhythm(rhythm: dict[str, Any]) -> str:
     if not rhythm:
         return "(no timing evidence)"
     lines = [f"session duration: {_stamp(rhythm['duration_sec'])}"] if "duration_sec" in rhythm else []
+    quiet = rhythm.get("longest_quiet_span")
+    if quiet:
+        lines.append(
+            f"longest quiet span: {quiet['seconds']}s, {_clock(quiet['from_sec'])}-"
+            f"{_clock(quiet['to_sec'])} — planning time; price it by the code that follows it"
+        )
     for key, label in _RHYTHM_LABELS:
         if key not in rhythm:
             continue
@@ -278,7 +333,12 @@ def _render_features(features: dict[str, Any], has_transcript: bool) -> str:
             f"({int(g.get('seconds') or g.get('duration_sec') or 0)}s)"
             for g in gaps
         )
-        lines.append(f"idle gaps (no events at all): {rendered}")
+        # Never call these "idle" to the model. A span with no keystrokes is
+        # reading or thinking until the code that follows proves otherwise.
+        lines.append(
+            "unobserved spans (no keystrokes, no voice data — reading/thinking; "
+            f"judge them only by the code that follows): {rendered}"
+        )
 
     bursts = [b for b in (features.get("typing_bursts") or []) if b.get("char_count")]
     if bursts:
@@ -313,6 +373,34 @@ def _render_features(features: dict[str, Any], has_transcript: bool) -> str:
         lines.append(render_block("other_features", extra))
 
     return "\n".join(lines) or "(no activity features)"
+
+
+def _render_profile(profile: dict[str, Any]) -> str:
+    """Masteries as whole percents — the model quoted raw floats at users."""
+    if not profile:
+        return "(no profile yet — this is an early session for them)"
+    lines: list[str] = []
+    if profile.get("est_rating"):
+        lines.append(f"estimated rating: {profile['est_rating']}")
+    if profile.get("recent_topics"):
+        lines.append("recent topics: " + ", ".join(str(t) for t in profile["recent_topics"]))
+
+    tags = profile.get("tags")
+    if isinstance(tags, dict) and tags:
+        ranked = sorted(
+            tags.items(), key=lambda kv: (kv[1] or {}).get("mastery") or 0, reverse=True
+        )
+        rendered = ", ".join(
+            f"{name} {round((stats.get('mastery') or 0) * 100)}% ({stats.get('attempts', 0)} att)"
+            for name, stats in ranked
+            if isinstance(stats, dict)
+        )
+        lines.append(f"tag mastery, strongest first: {rendered}")
+
+    extra = {k: v for k, v in profile.items() if k not in ("tags", "est_rating", "recent_topics")}
+    if extra:
+        lines.append(render_block("other_profile", extra))
+    return "\n".join(lines) or "(no profile yet — this is an early session for them)"
 
 
 def _render_transcript(segments: list[dict[str, Any]]) -> str:

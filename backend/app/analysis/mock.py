@@ -12,9 +12,9 @@ from typing import Any
 # Written against a ~10 minute solve arc: brute force, aha, refactor, WA, fix, AC.
 CANNED_ANALYSIS: dict[str, Any] = {
     "summary": (
-        "You spent the first four minutes building the brute force you already knew "
-        "wouldn't fit the limits, then found the monotonicity at 6:16 and had it "
-        "working 93 seconds later. The insight was fast; committing to it was slow."
+        "You called the inner loop slow at 5:18 and kept typing it anyway until the run "
+        "at 6:16 timed out. The binary search that replaced it was working 93 seconds "
+        "later, and the second submit passed."
     ),
     "phases": [
         {
@@ -84,44 +84,57 @@ CANNED_ANALYSIS: dict[str, Any] = {
     "firstCorrectCodeSec": 469,
     "ahaGapSeconds": 93,
     "bottleneck": (
-        "You read the constraints but don't convert them into a target complexity before "
-        "coding — n<=2e5 was on screen at 0:38 and you still committed 200 seconds to an "
-        "O(n^2) implementation that the first run killed."
+        "You said \"n is like two hundred thousand, that's fine right\" at 2:01 and never "
+        "turned that number into a target complexity, so the run at 6:16 is what told "
+        "you the O(n^2) loop was wrong."
     ),
     "strengths": [
-        "Once the right idea arrives you implement it fast and cleanly — 93 seconds from insight to working code.",
-        "You narrate your reasoning out loud, which is why the wrong turn was recoverable instead of silent.",
-        "You ran on the large sample before submitting rather than submitting hopefully.",
+        "You ran the large sample at 6:16 instead of submitting on the small one.",
+        "Once the predicate landed at 6:16 you had it coded in 93 seconds without rewriting the check.",
     ],
     "drills": [
         {
-            "title": "Constraint-first, 10 problems: write the target complexity before reading the statement body.",
-            "why": "Forces the 0:38 constraint line to become a decision instead of a fact you noted and ignored.",
+            "title": (
+                "Constraint-to-complexity gate, 10 problems: write n and the target big-O "
+                "as your first comment, before any code. Done when 10 in a row have the "
+                "comment and no line contradicts it."
+            ),
+            "why": (
+                "At 2:01 the 2e5 was a number you read out loud, not a budget you "
+                "designed against."
+            ),
         },
         {
-            "title": "Binary-search-on-answer set, 5 problems: state the monotone predicate in one line before coding.",
-            "why": "You found the predicate here only after a TLE; the drill moves it to the front of the solve.",
+            "title": (
+                "Monotone-predicate warmup, 5 binary-search problems: write feasible(k) "
+                "and one sentence on why it flips once, on paper, before opening the "
+                "editor. Done when all 5 predicates are right before you type."
+            ),
+            "why": "Here the predicate only appeared at 6:16, after the timeout, not before the code.",
         },
         {
-            "title": "Bounds katas: implement lo/hi binary search 5 times from scratch, no template.",
-            "why": "The single WA was an inclusive/exclusive bound — cheap to eliminate permanently.",
+            "title": (
+                "Bounds kata: write lo/hi binary search from scratch 5 times, no template, "
+                "and state what lo means at exit. Done when all 5 pass their first run."
+            ),
+            "why": "The WA at 8:31 was an inclusive/exclusive bound, not a logic error.",
         },
     ],
     "editorialGap": {
         "missedInsight": (
-            "The editorial starts from the observation you reached at 6:16: the feasibility "
-            "check is monotone in the answer, so the whole problem is a binary search over it. "
-            "You reached the same place, four minutes later and via a timeout."
+            "The editorial proves monotonicity before writing anything: if k cows fit at "
+            "distance d, they fit at any smaller d. You never made that argument. You "
+            "found the same fact at 6:16 by watching a run time out."
         ),
         "fasterPath": (
-            "At 2:01 you'd already said the check was 'slow'. Testing that check for monotonicity "
-            "right there — does success at k imply success at k+1? — would have skipped the entire "
-            "brute-force implementation."
+            "At 5:18 the feasibility check was already written and correct. Asking there "
+            "whether success at k implies success at k+1 would have skipped the whole "
+            "brute-force loop around it."
         ),
         "profileAdvice": (
-            "Your binary-search mastery is the weakest tag in your profile at 35% against 58% on "
-            "graphs, and this session is why. Spend the next block on binary-search-tagged problems "
-            "near your rating target rather than the graph problems you already convert."
+            "Binary search is your weakest tag at 35%, against 58% on graphs. Your last "
+            "four sessions were all graph problems. Spend the next block on binary-search "
+            "tags near your rating target instead."
         ),
     },
 }

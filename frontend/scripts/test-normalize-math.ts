@@ -119,8 +119,45 @@ for (const fixture of idempotencyFixtures) {
   check(`idempotent: ${JSON.stringify(fixture.slice(0, 40))}...`, twice, once);
 }
 
+// --- regression: a comma-list connector must not swallow the next English
+// word (a bare single letter must not match mid-word, e.g. the "a" in "and") ---
+check(
+  "does not eat the leading letter of the next word after a math comma",
+  normalizeMath("denotes s_r, and ⌊ x ⌋ denotes rounding"),
+  "denotes $s_r$, and $\\lfloor x\\rfloor$ denotes rounding"
+);
+check(
+  "does not treat an English comma-list as math without a qualifying atom",
+  normalizeMath("bring a pen, a notebook, and a laptop"),
+  "bring a pen, a notebook, and a laptop"
+);
+
 // --- sqrt(X) call syntax ---
 check("converts sqrt() call syntax to a math span", normalizeMath("running time is O(sqrt(n))"), "running time is O($\\sqrt{n}$)");
+
+// --- U+22C5 DOT OPERATOR (the dataset's actual "times" glyph, not U+00B7) ---
+check("converts the dot-operator multiplication sign", normalizeMath("the product n ⋅ m is large"), "the product $n \\cdot m$ is large");
+check(
+  "converts the dot-operator between a bare identifier and a subscripted one",
+  normalizeMath("the sum of n ⋅ a_i over all i"),
+  "the sum of $n \\cdot a_i$ over all i"
+);
+
+// --- floor / ceiling brackets ---
+check(
+  "converts a floor-bracket pair inside a relation chain",
+  normalizeMath("r_1 ≥ ⌊ n/2 ⌋"),
+  "$r_1 \\ge \\lfloor n/2\\rfloor$"
+);
+check("converts a standalone ceiling-bracket pair", normalizeMath("take ⌈ n/2 ⌉ steps"), "take $\\lceil n/2\\rceil$ steps");
+
+// --- unicode superscript digits (Codeforces' "O(n²)" complexity notation) ---
+check("converts a unicode superscript exponent on an identifier", normalizeMath("runs in O(n²) time"), "runs in O($n^2$) time");
+checkTrue(
+  "a superscript exponent after a closing paren at least normalizes to ASCII caret syntax",
+  normalizeMath("build costs O((nm)²) time").includes("(nm)^2"),
+  "expected ASCII '^2' somewhere in the output"
+);
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) {

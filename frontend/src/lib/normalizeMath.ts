@@ -38,9 +38,24 @@ export const MATH_SYMBOL_TABLE: readonly MathSymbolRule[] = [
   { symbol: "≠", latex: "\\ne ", example: "a ≠ b -> a \\ne b" },
   { symbol: "…", latex: "\\dots ", example: "a_1, …, a_n -> a_1, \\dots, a_n" },
   { symbol: "...", latex: "\\dots ", example: "a_1, ..., a_n -> a_1, \\dots, a_n" },
+  // U+22C5 DOT OPERATOR — the dataset's actual "times" glyph (far more common
+  // here than U+00B7 MIDDLE DOT, which some problems also use for the same thing).
+  { symbol: "⋅", latex: "\\cdot ", example: "n ⋅ m -> n \\cdot m" },
   { symbol: "·", latex: "\\cdot ", example: "a · b -> a \\cdot b" },
   { symbol: "×", latex: "\\times ", example: "n × m -> n \\times m" },
   { symbol: "→", latex: "\\to ", example: "a → b -> a \\to b" },
+  { symbol: "⇒", latex: "\\Rightarrow ", example: "a ⇒ b -> a \\Rightarrow b" },
+  // U+2212 MINUS SIGN (distinct from the ASCII hyphen, and from the prose
+  // em/en dashes "—"/"–", which are deliberately left untouched).
+  { symbol: "−", latex: "- ", example: "a_i − 1 -> a_i - 1" },
+  { symbol: "±", latex: "\\pm ", example: "n ± 1 -> n \\pm 1" },
+  { symbol: "∈", latex: "\\in ", example: "i ∈ S -> i \\in S" },
+  { symbol: "∪", latex: "\\cup ", example: "A ∪ B -> A \\cup B" },
+  { symbol: "⊕", latex: "\\oplus ", example: "a ⊕ b -> a \\oplus b" },
+  { symbol: "⌊", latex: "\\lfloor ", example: "⌊ n/2 ⌋ -> \\lfloor n/2 \\rfloor" },
+  { symbol: "⌋", latex: "\\rfloor ", example: "(see ⌊ above)" },
+  { symbol: "⌈", latex: "\\lceil ", example: "⌈ n/2 ⌉ -> \\lceil n/2 \\rceil" },
+  { symbol: "⌉", latex: "\\rceil ", example: "(see ⌈ above)" },
 ];
 
 function convertSymbols(mathText: string): string {
@@ -62,12 +77,19 @@ function convertSymbols(mathText: string): string {
 // Token grammar used by the run/lone-atom rules below.
 // ---------------------------------------------------------------------------
 
-/** Identifier with an explicit subscript and/or superscript: a_1, a_i, a_{i-1}, x_{i+1}, n^2. */
-const IDENT_SUB = String.raw`[A-Za-z][A-Za-z0-9]*(?:_(?:\{[A-Za-z0-9+\-]+\}|[A-Za-z0-9])|\^(?:\{[A-Za-z0-9+\-]+\}|[A-Za-z0-9]))+`;
+// Braced subscript/superscript body: identifiers, digits, +/-, and spaces
+// (the dataset writes both "a_{i-1}" and "a_{l + 1}" — spaced out).
+const BRACED_GROUP = String.raw`\{[A-Za-z0-9+\- ]+\}`;
+/** Identifier with an explicit subscript and/or superscript: a_1, a_i, a_{i-1}, x_{l + 1}, n^2. */
+const IDENT_SUB = String.raw`[A-Za-z][A-Za-z0-9]*(?:_(?:${BRACED_GROUP}|[A-Za-z0-9])|\^(?:${BRACED_GROUP}|[A-Za-z0-9]))+`;
 /** Number with an explicit exponent: 10^9, 2^{30}. */
-const NUMBER_POW = String.raw`[0-9]+\^(?:\{[A-Za-z0-9+\-]+\}|[A-Za-z0-9]+)`;
-/** A `\sqrt{...}` macro already produced by the sqrt-call rule below. */
-const SQRT_MACRO = String.raw`\\sqrt\{[^{}]+\}`;
+const NUMBER_POW = String.raw`[0-9]+\^(?:${BRACED_GROUP}|[A-Za-z0-9]+)`;
+/**
+ * A LaTeX macro span already produced by an earlier prose->macro rule
+ * (sqrt-call-to-macro, floor/ceil-brackets-to-macro, below) — treated as one
+ * qualifying atom so it can join a run or stand alone like any identifier.
+ */
+const MACRO_ATOM = String.raw`\\sqrt\{[^{}]+\}|\\lfloor[\s\S]*?\\rfloor|\\lceil[\s\S]*?\\rceil`;
 /** Ellipsis, unicode or ASCII triple-dot. */
 const ELLIPSIS = String.raw`…|\.\.\.`;
 /** Bare integer/decimal — only ever wrapped when chained with a qualifying neighbor (see runQualifies). */
@@ -77,17 +99,19 @@ const PLAIN_NUM = String.raw`[0-9]+(?:\.[0-9]+)?`;
  * usable as a chain member (never alone: see LONE_PATTERN), since a RUN
  * requires an adjacent relation operator or comma-list, and single-letter
  * "words" essentially never appear next to those in ordinary English prose.
+ * Word-boundary-anchored so it matches a standalone letter only — never the
+ * first letter of a longer word (e.g. the "a" in "and").
  */
-const PLAIN_IDENT = String.raw`[A-Za-z]`;
+const PLAIN_IDENT = String.raw`\b[A-Za-z]\b`;
 /** Relation/operator symbols that justify treating a chain as math. */
-const RELOP = String.raw`≤|≥|≠|<|>|=|·|×|→`;
+const RELOP = String.raw`≤|≥|≠|<|>|=|·|×|→|⋅|⇒|−|±|∈|∪|⊕`;
 
-const ATOM = `(?:${NUMBER_POW})|(?:${IDENT_SUB})|(?:${SQRT_MACRO})|(?:${ELLIPSIS})|(?:${PLAIN_NUM})|(?:${PLAIN_IDENT})`;
+const ATOM = `(?:${NUMBER_POW})|(?:${IDENT_SUB})|(?:${MACRO_ATOM})|(?:${ELLIPSIS})|(?:${PLAIN_NUM})|(?:${PLAIN_IDENT})`;
 const CONNECTOR = String.raw`(?:\s*(?:${RELOP})\s*|,\s+)`;
 /** Chain of >=2 atoms joined by relation operators or comma-lists. */
 const RUN_PATTERN = `(?:${ATOM})(?:${CONNECTOR}(?:${ATOM}))+`;
 /** A standalone atom that is math-y on its own, not part of a chain. */
-const LONE_PATTERN = `(?:${NUMBER_POW})|(?:${IDENT_SUB})|(?:${SQRT_MACRO})`;
+const LONE_PATTERN = `(?:${NUMBER_POW})|(?:${IDENT_SUB})|(?:${MACRO_ATOM})`;
 // Single pass so a run and its member atoms are never matched twice (which
 // would double-wrap, e.g. "$1 \le $a_i$ \le $10^9$$"). Alternation tries the
 // (longer) run pattern first at each position; only falls back to the lone
@@ -100,7 +124,7 @@ function runQualifies(run: string): boolean {
     /…|\.\.\./.test(run) ||
     new RegExp(IDENT_SUB).test(run) ||
     new RegExp(NUMBER_POW).test(run) ||
-    new RegExp(SQRT_MACRO).test(run)
+    new RegExp(MACRO_ATOM).test(run)
   );
 }
 
@@ -141,6 +165,18 @@ export const PRE_PROTECTION_RULES: readonly NormalizeRule[] = [
   },
 ];
 
+const SUPERSCRIPT_DIGIT_TO_ASCII: Readonly<Record<string, string>> = {
+  "⁰": "0",
+  "¹": "1",
+  "²": "2",
+  "³": "3",
+  "⁴": "4",
+  "⁵": "5",
+  "⁶": "6",
+  "⁷": "7",
+  "⁸": "8",
+  "⁹": "9",
+};
 // Runs AFTER code/math protection, in order, on whatever plain prose remains.
 export const POST_PROTECTION_RULES: readonly NormalizeRule[] = [
   {
@@ -151,11 +187,32 @@ export const POST_PROTECTION_RULES: readonly NormalizeRule[] = [
       text.replace(/\bsqrt\(([^()\n]+)\)/gi, (_m, inner: string) => `\\sqrt{${inner.trim()}}`),
   },
   {
+    name: "floor-ceil-brackets-to-macro",
+    description:
+      "Unicode floor/ceiling bracket pairs `⌊X⌋` / `⌈X⌉` become the `\\lfloor X\\rfloor` / `\\lceil X\\rceil` LaTeX macros (unwrapped; a later rule adds `$...$`).",
+    example: "⌊ n/2 ⌋ -> \\lfloor n/2\\rfloor",
+    apply: (text) =>
+      text
+        .replace(/⌊\s*([^⌊⌋⌈⌉\n]+?)\s*⌋/g, (_m, inner: string) => `\\lfloor ${inner}\\rfloor`)
+        .replace(/⌈\s*([^⌊⌋⌈⌉\n]+?)\s*⌉/g, (_m, inner: string) => `\\lceil ${inner}\\rceil`),
+  },
+  {
+    name: "superscript-digits-to-caret",
+    description:
+      "A unicode superscript digit run (as in Codeforces' \"O(n²)\" complexity notation) directly after an identifier/number/closing-paren becomes ASCII `^` exponent syntax, so the next rule picks it up as a normal power.",
+    example: "O(n²) -> O(n^2)",
+    apply: (text) =>
+      text.replace(/([A-Za-z0-9)])([⁰¹²³⁴⁵⁶⁷⁸⁹]+)/g, (_m, base: string, sup: string) => {
+        const digits = [...sup].map((d) => SUPERSCRIPT_DIGIT_TO_ASCII[d] ?? d).join("");
+        return digits.length > 1 ? `${base}^{${digits}}` : `${base}^${digits}`;
+      }),
+  },
+  {
     name: "relation-and-list-runs-or-lone-atoms",
     description:
       "Single pass, two behaviors, tried in this order at every position so a chain and its member atoms are never matched (and wrapped) twice: " +
-      "(a) a chain of >=2 math atoms (identifiers, numbers, ellipsis, \\sqrt{}) joined by relation operators (≤ ≥ ≠ < > = · × →) or comma-lists wraps as ONE inline math span; " +
-      "(b) failing that, a standalone identifier-with-subscript/superscript, exponentiated number, or \\sqrt{} macro wraps on its own. Symbols convert via MATH_SYMBOL_TABLE.",
+      "(a) a chain of >=2 math atoms (identifiers, numbers, ellipsis, macro atoms) joined by relation/set operators (≤ ≥ ≠ < > = · × ⋅ → ⇒ − ± ∈ ∪ ⊕) or comma-lists wraps as ONE inline math span; " +
+      "(b) failing that, a standalone identifier-with-subscript/superscript, exponentiated number, or macro atom (\\sqrt{}/\\lfloor⌋/\\lceil⌉) wraps on its own. Symbols convert via MATH_SYMBOL_TABLE.",
     example: "1 ≤ a_i ≤ 10^9 -> $1 \\le a_i \\le 10^9$   |   divisible by a_{i-1} -> divisible by $a_{i-1}$",
     apply: combinedRunOrLoneRule,
   },
