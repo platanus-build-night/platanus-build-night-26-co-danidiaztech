@@ -75,10 +75,15 @@ export function PlayerControls({
             smartSkip ? "bg-accent" : "border border-border bg-surface-alt"
           )}
         >
+          {/* `left-0.5` is load-bearing: without an explicit inset the knob is
+              laid out at its *static* position (~18px in this flex context) and
+              the translate stacks on top of that — so "off" rendered flush right
+              and "on" overflowed past the pill entirely. Anchoring left means the
+              translate is a pure 0 → 16px delta across a 36px track. */}
           <span
             className={cn(
-              "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
-              smartSkip ? "translate-x-4" : "translate-x-0.5"
+              "absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-150",
+              smartSkip ? "translate-x-4" : "translate-x-0"
             )}
           />
         </span>
