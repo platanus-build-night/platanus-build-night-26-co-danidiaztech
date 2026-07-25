@@ -35,7 +35,11 @@ from sqlalchemy.orm import Session
 
 from app.judge import core
 
-MAX_WORKERS = max(1, min(4, os.cpu_count() or 1))
+# `os.cpu_count()` reports the HOST's cores inside a container, so on a small
+# shared instance the default would happily fan out 4 judged processes on a
+# 512 MB box and get the whole service OOM-killed. `JUDGE_MAX_WORKERS` lets a
+# deployment pin it (Render free: 1).
+MAX_WORKERS = max(1, int(os.getenv("JUDGE_MAX_WORKERS") or min(4, os.cpu_count() or 1)))
 STDERR_EXCERPT_CHARS = 2000
 
 _POOL: Optional[ProcessPoolExecutor] = None

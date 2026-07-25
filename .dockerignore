@@ -1,0 +1,16 @@
+**/node_modules
+**/.venv
+**/__pycache__
+**/*.pyc
+**/dist
+**/.screenshots
+**/.env
+**/.env.*
+.git
+.github
+platanus-buildnight-ideas
+backend/seed/data/candidates.json
+backend/seed/data/curated.json
+backend/seed/data/validated.json
+*.md
+!README.md

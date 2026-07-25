@@ -28,9 +28,26 @@ from pathlib import Path
 from typing import TypedDict
 
 MEM_SLACK_MB = 64
-PY_TIMEOUT_MULT = 3
-CPP_TIMEOUT_MULT = 1
-COMPILE_TIMEOUT_S = 20
+COMPILE_TIMEOUT_S = int(os.getenv("JUDGE_COMPILE_TIMEOUT_S") or 20)
+
+# Deployment tunables. A shared-CPU host (Render free is ~0.1 vCPU) runs an
+# honest solution many times slower than the desktop the limits were calibrated
+# on, which manufactures TLEs on correct code. `JUDGE_TIME_SCALE` widens every
+# wall-clock budget without touching the problems' stated limits, and
+# `JUDGE_MEMORY_CAP_MB` clamps a problem's 256 MB allowance down to something a
+# 512 MB container can actually survive.
+_TIME_SCALE = float(os.getenv("JUDGE_TIME_SCALE") or 1.0)
+PY_TIMEOUT_MULT = 3 * _TIME_SCALE
+CPP_TIMEOUT_MULT = 1 * _TIME_SCALE
+
+_MEMORY_CAP_MB = int(os.getenv("JUDGE_MEMORY_CAP_MB") or 0)
+
+
+def effective_memory_mb(memory_limit_mb: int) -> int:
+    """A problem's memory allowance, clamped by any deployment cap."""
+    if _MEMORY_CAP_MB > 0:
+        return min(memory_limit_mb, _MEMORY_CAP_MB)
+    return memory_limit_mb
 
 _CACHE_DIR = Path(tempfile.gettempdir()) / "cptrainer_judge_cache"
 _CACHE_DIR.mkdir(exist_ok=True)
@@ -90,7 +107,7 @@ def _set_limits(memory_limit_mb: int, cpu_limit_s: int):
 
     def _apply():
         os.setsid()
-        mem_bytes = (memory_limit_mb + MEM_SLACK_MB) * 1024 * 1024
+        mem_bytes = (effective_memory_mb(memory_limit_mb) + MEM_SLACK_MB) * 1024 * 1024
         try:
             resource.setrlimit(resource.RLIMIT_AS, (mem_bytes, mem_bytes))
         except (ValueError, OSError):
