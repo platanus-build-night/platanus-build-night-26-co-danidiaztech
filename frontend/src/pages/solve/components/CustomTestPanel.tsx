@@ -183,7 +183,9 @@ export function CustomTestPanel({
           <OutputBlock
             label="stdout"
             value={result?.stdout ?? ""}
-            empty={running ? "running…" : "Run to see output."}
+            // "Run to see output" would be a lie once a run has completed and
+            // the program simply printed nothing — a real, debuggable result.
+            empty={running ? "running…" : result ? "(no output)" : "Run to see output."}
           />
         )}
       </div>
