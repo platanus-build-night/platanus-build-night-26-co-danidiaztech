@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db import Base, engine
 from app.routers import analysis, judge, problems, recommendations, sessions, settings
 
-app = FastAPI(title="CP Trainer API")
+app = FastAPI(title="WatchMeCode API")
 
 app.add_middleware(
     CORSMiddleware,

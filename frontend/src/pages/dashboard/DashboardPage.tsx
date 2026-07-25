@@ -2,8 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, ApiError } from "../../lib/api";
 import type { ProblemListItem, Recommendation, SessionListItem } from "../../lib/types";
-import { Badge, Button, Card, EmptyState, PageHeader, Spinner, ThemeToggle } from "../../components/ui";
+import { Badge, Button, Card, EmptyState, Spinner, ThemeToggle } from "../../components/ui";
 import { cn } from "../../lib/cn";
+import {
+  DIFFICULTY_BANDS,
+  SORT_OPTIONS,
+  bandFor,
+  compareProblems,
+  type SortKey,
+} from "../../lib/difficulty";
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -23,28 +30,119 @@ export function DashboardPage() {
       .catch((e) => setError(e instanceof ApiError ? e.message : "Failed to load data"));
   }, []);
 
+  const solvedCount = (problems ?? []).filter((p) => p.solved).length;
+  const finishedSessions = (sessions ?? []).filter((s) => s.status === "finished").length;
+
   return (
-    <div className="mx-auto max-w-5xl px-6 pb-16">
-      <PageHeader
-        title="CP Trainer"
-        subtitle="Capture how you solve, judge locally, understand your cognition."
-        actions={
-          <>
-            <Button variant="secondary" size="sm" onClick={() => navigate("/settings")} aria-label="Settings">
-              <span aria-hidden>⚙</span> Settings
-            </Button>
-            <ThemeToggle />
-          </>
-        }
+    <div className="mx-auto max-w-6xl px-6 pb-20">
+      <Masthead onSettings={() => navigate("/settings")} />
+
+      <Hero
+        problemCount={problems?.length ?? null}
+        solvedCount={solvedCount}
+        sessionCount={finishedSessions}
       />
 
-      {error && <p className="mb-4 text-sm text-danger">{error}</p>}
+      {error && (
+        <p className="mb-6 rounded-lg border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+          {error}
+        </p>
+      )}
 
       <RecommendedSection recommendations={recommendations} error={!!error} />
-
       <RecentSessionsSection sessions={sessions} problems={problems} error={!!error} />
-
       <ProblemsSection problems={problems} error={!!error} />
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------ Masthead --
+
+function Masthead({ onSettings }: { onSettings: () => void }) {
+  return (
+    <header className="flex items-center justify-between py-6">
+      <Link to="/" className="flex items-center gap-2.5">
+        <Logo />
+        <span className="text-lg font-semibold tracking-tight text-text">
+          Watch<span className="text-accent">Me</span>Code
+        </span>
+      </Link>
+      <nav className="flex items-center gap-2">
+        <Link
+          to="/about"
+          className="rounded-md px-2.5 py-1.5 text-sm text-text-muted transition-colors hover:text-text"
+        >
+          About
+        </Link>
+        <Button variant="secondary" size="sm" onClick={onSettings} aria-label="Settings">
+          <span aria-hidden>⚙</span> Settings
+        </Button>
+        <ThemeToggle />
+      </nav>
+    </header>
+  );
+}
+
+/** The mark: a play triangle inside a rounded square — "watch" plus "run". */
+function Logo() {
+  return (
+    <span
+      aria-hidden
+      className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-accent-contrast"
+    >
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path d="M4 3.2v7.6L11 7 4 3.2Z" fill="currentColor" />
+      </svg>
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------- Hero --
+
+function Hero({
+  problemCount,
+  solvedCount,
+  sessionCount,
+}: {
+  problemCount: number | null;
+  solvedCount: number;
+  sessionCount: number;
+}) {
+  return (
+    <section className="mb-10 border-b border-border pb-8">
+      <h1 className="max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-text sm:text-4xl">
+        Codeforces grades your answer.
+        <br />
+        <span className="text-text-muted">This grades your thinking.</span>
+      </h1>
+      <p className="mt-3 max-w-xl text-sm leading-relaxed text-text-muted">
+        Solve a problem while thinking out loud. Every keystroke and spoken word is
+        timestamped, then replayed as a cognitive timeline — so you can see where the
+        insight landed and what it cost you to get there.
+      </p>
+      <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
+        <Stat label="Problems" value={problemCount === null ? "—" : String(problemCount)} />
+        <Stat label="Solved" value={String(solvedCount)} />
+        <Stat label="Sessions analysed" value={String(sessionCount)} />
+      </dl>
+    </section>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-[11px] font-medium uppercase tracking-wide text-text-muted">{label}</dt>
+      <dd className="mt-0.5 font-mono text-xl text-text">{value}</dd>
+    </div>
+  );
+}
+
+function SectionHeading({ title, hint }: { title: string; hint?: string }) {
+  return (
+    <div className="mb-4 flex items-baseline justify-between gap-4">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-text">{title}</h2>
+      {hint && <span className="text-xs text-text-muted">{hint}</span>}
     </div>
   );
 }
@@ -59,10 +157,9 @@ function RecommendedSection({
   error: boolean;
 }) {
   return (
-    <section className="mb-10">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-muted">
-        Recommended next
-      </h2>
+    <section className="mb-12">
+      <SectionHeading title="Recommended next" hint="Picked from your per-topic mastery" />
+
       {!error && recommendations === null && (
         <div className="flex items-center gap-2 text-text-muted">
           <Spinner size="sm" /> Loading recommendations…
@@ -75,44 +172,72 @@ function RecommendedSection({
         />
       )}
       {recommendations !== null && recommendations.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-3">
-          {recommendations.map((rec) => (
-            <Card key={rec.problem.id} className="flex flex-col gap-3 p-4">
-              <div>
-                <Link
-                  to={`/solve/${rec.problem.id}`}
-                  className="font-medium text-text hover:text-accent"
-                >
-                  {rec.problem.title}
-                </Link>
-                <div className="mt-1.5 flex flex-wrap items-center gap-1">
-                  {rec.problem.rating != null && <Badge tone="neutral">{rec.problem.rating}</Badge>}
-                  {rec.problem.tags.map((t) => (
+        <div className="grid gap-4 sm:grid-cols-3">
+          {recommendations.map((rec) => {
+            const band = bandFor(rec.problem.rating);
+            return (
+              <Card
+                key={rec.problem.id}
+                className="group relative flex flex-col gap-3 overflow-hidden p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent hover:shadow-lg"
+              >
+                {/* Difficulty stripe — the card's colour tells you the tier before you read it. */}
+                <span
+                  aria-hidden
+                  className="absolute inset-x-0 top-0 h-0.5"
+                  style={{ backgroundColor: band.color }}
+                />
+                <div className="flex items-start justify-between gap-2">
+                  <Link
+                    to={`/solve/${rec.problem.id}`}
+                    className="font-medium leading-snug text-text transition-colors hover:text-accent"
+                  >
+                    {rec.problem.title}
+                  </Link>
+                  {rec.problem.rating != null && (
+                    <span className="shrink-0 font-mono text-xs text-text-muted">
+                      {rec.problem.rating}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-1">
+                  <span
+                    className="text-[11px] font-medium uppercase tracking-wide"
+                    style={{ color: band.color }}
+                  >
+                    {band.label}
+                  </span>
+                  {rec.problem.tags.slice(0, 2).map((t) => (
                     <Badge key={t}>{t}</Badge>
                   ))}
                 </div>
-              </div>
-              <div className="flex flex-1 flex-wrap items-start gap-1.5">
-                {rec.why.map((w) => (
-                  <Badge key={w} tone="accent">
-                    {w}
-                  </Badge>
-                ))}
-              </div>
-              <Link to={`/solve/${rec.problem.id}`} className="mt-auto">
-                <Button size="sm" className="w-full">
-                  Practice
-                </Button>
-              </Link>
-            </Card>
-          ))}
+
+                <ul className="flex flex-1 flex-col gap-1 text-xs text-text-muted">
+                  {rec.why.map((w) => (
+                    <li key={w} className="flex gap-1.5">
+                      <span aria-hidden className="text-accent">
+                        ·
+                      </span>
+                      {w}
+                    </li>
+                  ))}
+                </ul>
+
+                <Link to={`/solve/${rec.problem.id}`} className="mt-auto">
+                  <Button size="sm" className="w-full">
+                    Practice
+                  </Button>
+                </Link>
+              </Card>
+            );
+          })}
         </div>
       )}
     </section>
   );
 }
 
-// ------------------------------------------------------------ Recent sessions
+// ---------------------------------------------------------- Recent sessions --
 
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -140,19 +265,7 @@ function RecentSessionsSection({
     return map;
   }, [problems]);
 
-  if (error) return null;
-  if (sessions === null) {
-    return (
-      <section className="mb-10">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-muted">
-          Recent sessions
-        </h2>
-        <div className="flex items-center gap-2 text-text-muted">
-          <Spinner size="sm" /> Loading sessions…
-        </div>
-      </section>
-    );
-  }
+  if (error || sessions === null) return null;
 
   const recent = [...sessions]
     .sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime())
@@ -161,29 +274,34 @@ function RecentSessionsSection({
   if (recent.length === 0) return null;
 
   return (
-    <section className="mb-10">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-muted">
-        Recent sessions
-      </h2>
-      <div className="flex gap-3 overflow-x-auto pb-1">
+    <section className="mb-12">
+      <SectionHeading title="Recent sessions" hint="Finished sessions open their replay" />
+      <div className="flex gap-3 overflow-x-auto pb-2">
         {recent.map((s) => {
           const title = titleFor.get(s.problem_id) ?? `Problem #${s.problem_id}`;
+          const finished = s.status === "finished";
           const content = (
             <Card
               className={cn(
-                "flex w-56 shrink-0 flex-col gap-2 p-3",
-                s.status === "finished" && "cursor-pointer hover:border-accent"
+                "flex h-full w-52 shrink-0 flex-col gap-2 p-3.5 transition-all duration-200",
+                finished && "cursor-pointer hover:-translate-y-0.5 hover:border-accent hover:shadow-md"
               )}
             >
               <div className="flex items-center justify-between gap-2">
-                <Badge tone={s.status === "finished" ? "success" : "neutral"}>{s.status}</Badge>
-                <span className="text-xs text-text-muted">{relativeTime(s.started_at)}</span>
+                <span
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    finished ? "bg-success" : "bg-text-muted"
+                  )}
+                  aria-hidden
+                />
+                <span className="text-[11px] text-text-muted">{relativeTime(s.started_at)}</span>
               </div>
-              <span className="truncate text-sm font-medium text-text">{title}</span>
-              <span className="text-xs text-text-muted">{s.language}</span>
+              <span className="line-clamp-2 text-sm font-medium leading-snug text-text">{title}</span>
+              <span className="mt-auto font-mono text-[11px] text-text-muted">{s.language}</span>
             </Card>
           );
-          return s.status === "finished" ? (
+          return finished ? (
             <Link key={s.id} to={`/review/${s.id}`}>
               {content}
             </Link>
@@ -198,31 +316,67 @@ function RecentSessionsSection({
 
 // --------------------------------------------------------------- Problems --
 
-function ProblemsSection({ problems, error }: { problems: ProblemListItem[] | null; error: boolean }) {
+function ProblemsSection({
+  problems,
+  error,
+}: {
+  problems: ProblemListItem[] | null;
+  error: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
-  const [minRating, setMinRating] = useState("");
-  const [maxRating, setMaxRating] = useState("");
+  const [band, setBand] = useState<string | null>(null);
+  const [sort, setSort] = useState<SortKey>("difficulty");
+  const [hideSolved, setHideSolved] = useState(false);
+  const [showAllTags, setShowAllTags] = useState(false);
 
-  const allTags = useMemo(() => {
-    const tags = new Set<string>();
-    for (const p of problems ?? []) for (const t of p.tags) tags.add(t);
-    return [...tags].sort();
+  // Tags ranked by how many problems carry them: the long tail of one-off tags
+  // is noise, so only the useful ones show until "more" is clicked.
+  const rankedTags = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of problems ?? []) {
+      for (const t of p.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
   }, [problems]);
+
+  const visibleTags = showAllTags ? rankedTags : rankedTags.slice(0, 10);
 
   const filtered = useMemo(() => {
     if (!problems) return [];
     const q = query.trim().toLowerCase();
-    const min = minRating === "" ? null : Number(minRating);
-    const max = maxRating === "" ? null : Number(maxRating);
-    return problems.filter((p) => {
-      if (q && !p.title.toLowerCase().includes(q)) return false;
-      if (selectedTags.size > 0 && !p.tags.some((t) => selectedTags.has(t))) return false;
-      if (min != null && (p.rating ?? 0) < min) return false;
-      if (max != null && (p.rating ?? 0) > max) return false;
-      return true;
-    });
-  }, [problems, query, selectedTags, minRating, maxRating]);
+    const activeBand = band ? DIFFICULTY_BANDS.find((b) => b.key === band) : null;
+
+    return problems
+      .filter((p) => {
+        if (q && !p.title.toLowerCase().includes(q)) return false;
+        if (selectedTags.size > 0 && !p.tags.some((t) => selectedTags.has(t))) return false;
+        if (hideSolved && p.solved) return false;
+        if (activeBand) {
+          const r = p.rating ?? 0;
+          if (r < activeBand.min || r > activeBand.max) return false;
+        }
+        return true;
+      })
+      .sort(compareProblems(sort));
+  }, [problems, query, selectedTags, band, sort, hideSolved]);
+
+  // Counts per band drive the filter pills — a band with nothing in it is
+  // shown greyed rather than hidden, so the scale stays legible.
+  const bandCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of problems ?? []) {
+      const b = bandFor(p.rating);
+      counts.set(b.key, (counts.get(b.key) ?? 0) + 1);
+    }
+    return counts;
+  }, [problems]);
+
+  // Grouping only makes sense while sorted by difficulty; any other sort would
+  // interleave bands and the headers would lie.
+  const grouped = sort === "difficulty" && band === null;
+
+  const hasFilters = query || selectedTags.size > 0 || band !== null || hideSolved;
 
   function toggleTag(tag: string) {
     setSelectedTags((prev) => {
@@ -233,9 +387,19 @@ function ProblemsSection({ problems, error }: { problems: ProblemListItem[] | nu
     });
   }
 
+  function clearAll() {
+    setQuery("");
+    setSelectedTags(new Set());
+    setBand(null);
+    setHideSolved(false);
+  }
+
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-text-muted">Problems</h2>
+      <SectionHeading
+        title="Problem set"
+        hint={problems ? `${filtered.length} of ${problems.length} shown` : undefined}
+      />
 
       {!error && problems === null && (
         <div className="flex items-center gap-2 text-text-muted">
@@ -249,92 +413,211 @@ function ProblemsSection({ problems, error }: { problems: ProblemListItem[] | nu
 
       {problems !== null && problems.length > 0 && (
         <>
-          <div className="mb-3 flex flex-col gap-3">
+          <div className="mb-5 space-y-3">
+            {/* Difficulty band pills — the primary axis of separation. */}
+            <div className="flex flex-wrap gap-1.5">
+              <BandPill
+                label="All"
+                count={problems.length}
+                active={band === null}
+                onClick={() => setBand(null)}
+              />
+              {DIFFICULTY_BANDS.map((b) => (
+                <BandPill
+                  key={b.key}
+                  label={b.label}
+                  count={bandCounts.get(b.key) ?? 0}
+                  color={b.color}
+                  active={band === b.key}
+                  onClick={() => setBand(band === b.key ? null : b.key)}
+                />
+              ))}
+            </div>
+
             <div className="flex flex-wrap items-center gap-2">
               <input
-                type="text"
+                type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search problems…"
                 aria-label="Search problems"
-                className="min-w-0 flex-1 rounded-md border border-border bg-surface-alt px-3 py-1.5 text-sm text-text placeholder:text-text-muted focus-visible:outline-2 focus-visible:outline-accent"
+                className="min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none transition-colors placeholder:text-text-muted focus:border-accent"
               />
-              <input
-                type="number"
-                value={minRating}
-                onChange={(e) => setMinRating(e.target.value)}
-                placeholder="Min"
-                aria-label="Minimum rating"
-                className="w-20 rounded-md border border-border bg-surface-alt px-3 py-1.5 text-sm text-text placeholder:text-text-muted focus-visible:outline-2 focus-visible:outline-accent"
-              />
-              <input
-                type="number"
-                value={maxRating}
-                onChange={(e) => setMaxRating(e.target.value)}
-                placeholder="Max"
-                aria-label="Maximum rating"
-                className="w-20 rounded-md border border-border bg-surface-alt px-3 py-1.5 text-sm text-text placeholder:text-text-muted focus-visible:outline-2 focus-visible:outline-accent"
-              />
-              {(query || selectedTags.size > 0 || minRating || maxRating) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setQuery("");
-                    setSelectedTags(new Set());
-                    setMinRating("");
-                    setMaxRating("");
-                  }}
-                >
-                  Clear filters
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortKey)}
+                aria-label="Sort problems"
+                className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none transition-colors focus:border-accent"
+              >
+                {SORT_OPTIONS.map((o) => (
+                  <option key={o.key} value={o.key}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setHideSolved((v) => !v)}
+                aria-pressed={hideSolved}
+                className={cn(
+                  "rounded-lg border px-3 py-2 text-sm transition-colors",
+                  hideSolved
+                    ? "border-accent bg-accent/10 text-accent"
+                    : "border-border bg-surface text-text-muted hover:text-text"
+                )}
+              >
+                Hide solved
+              </button>
+              {hasFilters && (
+                <Button variant="ghost" size="sm" onClick={clearAll}>
+                  Clear
                 </Button>
               )}
             </div>
-            <div className="flex flex-wrap gap-1.5">
-              {allTags.map((t) => (
-                <button key={t} type="button" onClick={() => toggleTag(t)} aria-pressed={selectedTags.has(t)}>
-                  <Badge
-                    tone={selectedTags.has(t) ? "accent" : "neutral"}
-                    className={cn("cursor-pointer select-none", selectedTags.has(t) && "ring-1 ring-accent")}
-                  >
-                    {t}
-                  </Badge>
+
+            <div className="flex flex-wrap items-center gap-1.5">
+              {visibleTags.map(([tag, count]) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  aria-pressed={selectedTags.has(tag)}
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-xs transition-colors",
+                    selectedTags.has(tag)
+                      ? "border-accent bg-accent/10 text-accent"
+                      : "border-border text-text-muted hover:border-text-muted hover:text-text"
+                  )}
+                >
+                  {tag} <span className="opacity-60">{count}</span>
                 </button>
               ))}
+              {rankedTags.length > 10 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllTags((v) => !v)}
+                  className="px-1.5 py-1 text-xs text-accent hover:underline"
+                >
+                  {showAllTags ? "Show fewer" : `+${rankedTags.length - 10} more`}
+                </button>
+              )}
             </div>
           </div>
 
           {filtered.length === 0 ? (
             <EmptyState
               title="No problems match your filters"
-              description="Try clearing the search, tags, or rating range."
+              description="Try clearing the search, tags, or difficulty band."
             />
-          ) : (
-            <div className="divide-y divide-border rounded-xl border border-border bg-surface">
-              {filtered.map((p) => (
-                <Link
-                  key={p.id}
-                  to={`/solve/${p.id}`}
-                  className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-surface-alt"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className="truncate font-medium text-text">{p.title}</span>
-                    <div className="flex shrink-0 flex-wrap gap-1">
-                      {p.tags.map((t) => (
-                        <Badge key={t}>{t}</Badge>
-                      ))}
+          ) : grouped ? (
+            <div className="space-y-8">
+              {DIFFICULTY_BANDS.map((b) => {
+                const rows = filtered.filter((p) => bandFor(p.rating).key === b.key);
+                if (rows.length === 0) return null;
+                return (
+                  <div key={b.key}>
+                    <div className="mb-2 flex items-baseline gap-2.5">
+                      <span
+                        aria-hidden
+                        className="h-2 w-2 shrink-0 rounded-full"
+                        style={{ backgroundColor: b.color }}
+                      />
+                      <h3 className="text-sm font-semibold text-text">{b.label}</h3>
+                      <span className="font-mono text-xs text-text-muted">
+                        {b.max === Number.MAX_SAFE_INTEGER ? `${b.min}+` : `${b.min}–${b.max}`}
+                      </span>
+                      <span className="ml-auto text-xs text-text-muted">{rows.length}</span>
                     </div>
+                    <p className="mb-2.5 text-xs text-text-muted">{b.blurb}</p>
+                    <ProblemTable rows={rows} />
                   </div>
-                  <div className="flex shrink-0 items-center gap-3 text-sm text-text-muted">
-                    {p.rating != null && <span>{p.rating}</span>}
-                    {p.solved && <Badge tone="success">solved</Badge>}
-                  </div>
-                </Link>
-              ))}
+                );
+              })}
             </div>
+          ) : (
+            <ProblemTable rows={filtered} />
           )}
         </>
       )}
     </section>
+  );
+}
+
+function BandPill({
+  label,
+  count,
+  color,
+  active,
+  onClick,
+}: {
+  label: string;
+  count: number;
+  color?: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const empty = count === 0;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={empty}
+      aria-pressed={active}
+      className={cn(
+        "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+        active
+          ? "border-accent bg-accent/10 text-accent"
+          : "border-border text-text-muted hover:border-text-muted hover:text-text",
+        empty && "cursor-not-allowed opacity-40 hover:border-border hover:text-text-muted"
+      )}
+    >
+      {color && (
+        <span aria-hidden className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
+      )}
+      {label}
+      <span className="font-mono opacity-60">{count}</span>
+    </button>
+  );
+}
+
+function ProblemTable({ rows }: { rows: ProblemListItem[] }) {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      {rows.map((p, i) => {
+        const band = bandFor(p.rating);
+        return (
+          <Link
+            key={p.id}
+            to={`/solve/${p.id}`}
+            className={cn(
+              "group flex items-center gap-4 px-4 py-3 transition-colors hover:bg-surface-alt",
+              i > 0 && "border-t border-border"
+            )}
+          >
+            <span
+              aria-hidden
+              className="h-1.5 w-1.5 shrink-0 rounded-full"
+              style={{ backgroundColor: band.color }}
+            />
+            <span className="min-w-0 flex-1 truncate text-sm font-medium text-text group-hover:text-accent">
+              {p.title}
+            </span>
+            <div className="hidden shrink-0 gap-1 sm:flex">
+              {p.tags.slice(0, 3).map((t) => (
+                <Badge key={t}>{t}</Badge>
+              ))}
+            </div>
+            {p.solved && (
+              <span className="shrink-0 text-xs font-medium text-success" title="Solved">
+                ✓
+              </span>
+            )}
+            <span className="w-10 shrink-0 text-right font-mono text-xs text-text-muted">
+              {p.rating ?? "—"}
+            </span>
+          </Link>
+        );
+      })}
+    </div>
   );
 }

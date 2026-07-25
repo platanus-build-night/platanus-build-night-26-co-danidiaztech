@@ -1,5 +1,5 @@
 {
-  "project-name": "<FILL THIS>",
-  "project-oneliner": "<FILL THIS>",
-  "project-description": "<FILL THIS>"
+  "project-name": "WatchMeCode",
+  "project-oneliner": "Codeforces grades your answer — WatchMeCode grades your thinking.",
+  "project-description": "A competitive programming and interview trainer that watches HOW you solve, not just whether you passed. You commit to a problem before seeing it (statement, samples and tags are withheld server-side until you start, so the clock is honest). While you solve, every keystroke, spoken sentence, sketch and judge verdict is timestamped. Afterwards the session replays as a scrubbable cognitive timeline — your code evolving beside your own think-aloud transcript, with dead air compressed away — and Claude reads that tape to name ONE specific, falsifiable weakness, anchored to timestamps and verbatim quotes. The headline metric is the Aha-Gap: the seconds between your insight landing and correct code existing. Everything except the analysis is deterministic: 51 real Codeforces problems (DeepMind CodeContests, CC BY 4.0), each validated by running a known-correct solution through our own sandboxed judge; a local Python/C++ judge with per-problem time and memory limits and no external service; and a zero-AI recommendation engine scoring problems on per-topic mastery, rating fit, staleness and diversity with human-readable reasons. Self-hosted and single-user: recordings and transcripts stay in your own Postgres, and you bring your own Claude API key or Claude subscription."
 }
