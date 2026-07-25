@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+/.pnp
+.pnp.*
+
+# python
+.venv/
+__pycache__/
+*.pyc
+
+# build output
+dist/
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env files
+.env
+.env.local
+.env*.local
+
+# typescript
+*.tsbuildinfo
+
+# playwright screenshots
+.screenshots/
+frontend/.screenshots/
+
+# playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/

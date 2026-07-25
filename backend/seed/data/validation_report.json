@@ -1,0 +1,1164 @@
+{
+ "elapsed_s": 59.2,
+ "total": 56,
+ "passed": 51,
+ "failed": 5,
+ "details": [
+  {
+   "status": "pass",
+   "external_id": "1566A",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "fail",
+   "external_id": "1574A",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 17,
+      "AC": 3
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 11,
+      "AC": 9
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 6,
+      "RE": 13,
+      "AC": 1
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 17,
+      "AC": 3
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 17,
+      "AC": 3
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 11,
+      "AC": 9
+     }
+    }
+   ]
+  },
+  {
+   "status": "pass",
+   "external_id": "1608A",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1620A",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1622A",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1554A",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1591A",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1582A",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1553A",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1618A",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1619A",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1582B",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1559B",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1567B",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1598B",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1569B",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 6
+     }
+    }
+   ],
+   "n_tests": 6
+  },
+  {
+   "status": "pass",
+   "external_id": "1622B",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1594B",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1604B",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1575A",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1623B",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 20
+     }
+    },
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1618C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "fail",
+   "external_id": "1557B",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "AC": 1,
+      "WA": 19
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "AC": 1,
+      "WA": 19
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "AC": 1,
+      "WA": 19
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 1,
+      "AC": 19
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "AC": 1,
+      "WA": 19
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "AC": 1,
+      "WA": 19
+     }
+    }
+   ]
+  },
+  {
+   "status": "pass",
+   "external_id": "1613C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1608B",
+   "language_used": "cpp",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 3,
+      "AC": 17
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 4,
+      "AC": 16
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 4,
+      "AC": 16
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 4,
+      "AC": 16
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1559C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1586B",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "RE": 20
+     }
+    },
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1582C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1594E1",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1618D",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1591C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1556B",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1604C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1560D",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1600J",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 9
+     }
+    }
+   ],
+   "n_tests": 9
+  },
+  {
+   "status": "pass",
+   "external_id": "1549C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1569C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1562C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 20
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 20
+     }
+    },
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "fail",
+   "external_id": "1553D",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "AC": 4,
+      "WA": 16
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "AC": 4,
+      "WA": 16
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "AC": 4,
+      "WA": 16
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "AC": 4,
+      "WA": 16
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "AC": 4,
+      "WA": 16
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "AC": 4,
+      "WA": 16
+     }
+    }
+   ]
+  },
+  {
+   "status": "pass",
+   "external_id": "1575J",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1623C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "fail",
+   "external_id": "1582D",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 12,
+      "AC": 8
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 20
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 15,
+      "AC": 5
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 17,
+      "RE": 3
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 11,
+      "AC": 9
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "CE": 20
+     }
+    }
+   ]
+  },
+  {
+   "status": "pass",
+   "external_id": "1566D2",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1551D1",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "RE": 20
+     }
+    },
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1618E",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1556C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1552C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1591D",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1620E",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "RE": 20
+     }
+    },
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1620D",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1558C",
+   "language_used": "cpp",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 17,
+      "AC": 3
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 17,
+      "AC": 3
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 17,
+      "AC": 3
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 17,
+      "AC": 3
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1619F",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1599C",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "fail",
+   "external_id": "1551D2",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "RE": 20
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 3,
+      "AC": 16,
+      "RE": 1
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 2,
+      "AC": 17,
+      "TLE": 1
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 2,
+      "AC": 17,
+      "RE": 1
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 2,
+      "AC": 18
+     }
+    },
+    {
+     "language": "cpp",
+     "ok": false,
+     "per_test_summary": {
+      "WA": 3,
+      "AC": 17
+     }
+    }
+   ]
+  },
+  {
+   "status": "pass",
+   "external_id": "1555E",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "RE": 20
+     }
+    },
+    {
+     "language": "python3",
+     "ok": false,
+     "per_test_summary": {
+      "RE": 20
+     }
+    },
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  },
+  {
+   "status": "pass",
+   "external_id": "1567E",
+   "language_used": "python3",
+   "attempts": [
+    {
+     "language": "python3",
+     "ok": true,
+     "per_test_summary": {
+      "AC": 20
+     }
+    }
+   ],
+   "n_tests": 20
+  }
+ ]
+}
