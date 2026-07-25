@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { Marker, Phase } from "../../../lib/types";
 import { formatMs } from "../format";
 import { MARKER_GLYPH, PHASE_COLORS, type IdleRegion } from "./timelineUtils";
+import { TimelineTooltip, type TooltipContent } from "./TimelineTooltip";
 
 export interface RunTick {
   id: number;
@@ -33,6 +34,29 @@ const PHASE_LABELS: Record<string, string> = {
   stuck: "Stuck",
 };
 
+const MARKER_LABELS: Record<string, string> = {
+  aha: "Aha moment",
+  hesitation: "Hesitation",
+  "wrong-turn": "Wrong turn",
+};
+
+const MARKER_ACCENTS: Record<string, string> = {
+  aha: "var(--color-success)",
+  hesitation: "var(--color-warning)",
+  "wrong-turn": "var(--color-danger)",
+};
+
+function markerTip(m: Marker, leftPct: number): TooltipContent {
+  return {
+    leftPct,
+    kicker: MARKER_LABELS[m.kind] ?? m.kind,
+    time: formatMs(m.atSec * 1000),
+    quote: m.quote || undefined,
+    body: m.note || undefined,
+    accent: MARKER_ACCENTS[m.kind],
+  };
+}
+
 /** Bottom timeline bar: phase-colored segments, aha/hesitation/wrong-turn
  * marker glyphs, dimmed idle/dead-air regions, activity ticks, run/submit
  * ticks, a draggable scrubber, and a legend so the colors/glyphs are
@@ -49,6 +73,14 @@ export function TimelineBar({
 }: TimelineBarProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
+  const [tooltip, setTooltip] = useState<TooltipContent | null>(null);
+
+  // Hidden while scrubbing: during a drag the cursor is a scrubber, not an
+  // inspector, and a tooltip chasing it is just noise.
+  const showTip = useCallback((content: TooltipContent) => {
+    if (!draggingRef.current) setTooltip(content);
+  }, []);
+  const hideTip = useCallback(() => setTooltip(null), []);
 
   const phaseLabelsPresent = useMemo(
     () => Array.from(new Set(phases.map((p) => p.label))),
@@ -85,7 +117,11 @@ export function TimelineBar({
   };
 
   return (
-    <div className="select-none">
+    // `relative` anchors the floating tooltip; leaving the row on pointer-leave
+    // guarantees it clears even if a child's leave event is missed mid-drag.
+    <div className="relative select-none" onPointerLeave={hideTip}>
+      <TimelineTooltip content={tooltip} />
+
       <div className="mb-1 flex justify-between font-mono text-[10px] text-text-muted">
         <span>0:00</span>
         <span>{formatMs(durationMs)}</span>
@@ -103,28 +139,51 @@ export function TimelineBar({
         aria-valuemax={durationMs}
         aria-valuenow={currentMs}
       >
-        {phases.map((p, i) => (
-          <div
-            key={i}
-            title={`${p.label}${p.note ? ` — ${p.note}` : ""} (${formatMs(p.startSec * 1000)}–${formatMs(
-              p.endSec * 1000
-            )})`}
-            className="absolute top-0 h-full first:rounded-l-full last:rounded-r-full"
-            style={{
-              left: `${pct(p.startSec * 1000)}%`,
-              width: `${Math.max(pct((p.endSec - p.startSec) * 1000), 0.4)}%`,
-              backgroundColor: PHASE_COLORS[p.label] ?? "var(--color-border)",
-              opacity: 0.55,
-            }}
-          />
-        ))}
+        {phases.map((p, i) => {
+          const startMs = p.startSec * 1000;
+          const midPct = pct(startMs + ((p.endSec - p.startSec) * 1000) / 2);
+          return (
+            <div
+              key={i}
+              className="absolute top-0 h-full transition-opacity duration-150 first:rounded-l-full last:rounded-r-full hover:opacity-90"
+              style={{
+                left: `${pct(startMs)}%`,
+                width: `${Math.max(pct((p.endSec - p.startSec) * 1000), 0.4)}%`,
+                backgroundColor: PHASE_COLORS[p.label] ?? "var(--color-border)",
+                opacity: 0.55,
+              }}
+              onPointerEnter={() =>
+                showTip({
+                  leftPct: midPct,
+                  kicker: PHASE_LABELS[p.label] ?? p.label,
+                  time: `${formatMs(startMs)}–${formatMs(p.endSec * 1000)}`,
+                  body: p.note || undefined,
+                  accent: PHASE_COLORS[p.label],
+                })
+              }
+              onPointerLeave={hideTip}
+            />
+          );
+        })}
 
         {idleRegions.map((r, i) => (
           <div
             key={i}
-            title="Idle / no activity"
             className="absolute top-0 h-full bg-[repeating-linear-gradient(45deg,rgba(0,0,0,0.18),rgba(0,0,0,0.18)_4px,transparent_4px,transparent_8px)]"
             style={{ left: `${pct(r.startMs)}%`, width: `${pct(r.endMs - r.startMs)}%` }}
+            onPointerEnter={() =>
+              showTip({
+                leftPct: pct(r.startMs + (r.endMs - r.startMs) / 2),
+                kicker: "No keystrokes",
+                time: `${formatMs(r.startMs)}–${formatMs(r.endMs)} · ${Math.round(
+                  (r.endMs - r.startMs) / 1000
+                )}s`,
+                // Framed the same way the analysis is told to frame it:
+                // silence is planning until the following code says otherwise.
+                body: "Nothing recorded here — reading or thinking. Judge it by the code that follows.",
+              })
+            }
+            onPointerLeave={hideTip}
           />
         ))}
 
@@ -153,9 +212,30 @@ export function TimelineBar({
             <button
               key={`${r.kind}-${r.id}`}
               type="button"
-              title={`${r.kind} — ${r.verdict} @ ${formatMs(r.atMs)}`}
+              aria-label={`${r.kind} ${r.verdict} at ${formatMs(r.atMs)}`}
               onClick={() => onSeek(r.atMs)}
-              className="absolute top-0 h-2.5 w-2.5 -translate-x-1/2 rounded-sm ring-1 ring-border"
+              onPointerEnter={() =>
+                showTip({
+                  leftPct: pct(r.atMs),
+                  kicker: r.kind === "submit" ? "Submit" : "Run",
+                  time: formatMs(r.atMs),
+                  body: `Verdict ${r.verdict}. Click to jump here.`,
+                  accent:
+                    r.verdict === "AC" ? "var(--color-success)" : "var(--color-danger)",
+                })
+              }
+              onPointerLeave={hideTip}
+              onFocus={() =>
+                showTip({
+                  leftPct: pct(r.atMs),
+                  kicker: r.kind === "submit" ? "Submit" : "Run",
+                  time: formatMs(r.atMs),
+                  body: `Verdict ${r.verdict}.`,
+                  accent: r.verdict === "AC" ? "var(--color-success)" : "var(--color-danger)",
+                })
+              }
+              onBlur={hideTip}
+              className="absolute top-0 h-2.5 w-2.5 -translate-x-1/2 rounded-sm ring-1 ring-border transition-transform duration-150 hover:scale-125 focus-visible:scale-125"
               style={{
                 left: `${pct(r.atMs)}%`,
                 backgroundColor: r.verdict === "AC" ? "var(--color-success)" : "var(--color-danger)",
@@ -171,9 +251,13 @@ export function TimelineBar({
             <button
               key={i}
               type="button"
-              title={`${m.kind}${m.quote ? `: "${m.quote}"` : ""}${m.note ? ` — ${m.note}` : ""}`}
+              aria-label={`${m.kind} at ${formatMs(m.atSec * 1000)}`}
               onClick={() => onSeek(m.atSec * 1000)}
-              className="absolute -translate-x-1/2 rounded-full border border-border bg-surface text-xs leading-none shadow-sm hover:border-accent"
+              onPointerEnter={() => showTip(markerTip(m, pct(m.atSec * 1000)))}
+              onPointerLeave={hideTip}
+              onFocus={() => showTip(markerTip(m, pct(m.atSec * 1000)))}
+              onBlur={hideTip}
+              className="absolute -translate-x-1/2 rounded-full border border-border bg-surface text-xs leading-none shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:border-accent hover:shadow-md focus-visible:-translate-y-0.5 focus-visible:border-accent"
               style={{ left: `${pct(m.atSec * 1000)}%` }}
             >
               <span className="block px-1.5 py-1">{MARKER_GLYPH[m.kind] ?? "•"}</span>

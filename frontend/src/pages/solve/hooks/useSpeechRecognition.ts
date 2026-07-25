@@ -7,6 +7,19 @@ const PERMISSION_DENIED_MSG =
 const NO_MIC_MSG =
   "No microphone found (common in WSL — use Windows Chrome and grant permission).";
 const NETWORK_MSG = "Speech service unreachable.";
+// Brave ships Chromium's `webkitSpeechRecognition` object but deliberately
+// disables the backend behind it, so feature-detection passes and every
+// session then fails with a `network` error forever. Detect the browser
+// itself and say so up front rather than letting the user record silence.
+// See https://github.com/brave/brave-browser/issues/2802
+const BRAVE_MSG =
+  "Brave disables speech recognition (it blocks the Google speech service the Web Speech API needs). Use Chrome or Edge to record — or solve without recording.";
+const NETWORK_FATAL_MSG =
+  "Speech service unreachable — the browser blocked it or there's no connection. Chrome and Edge work; Brave blocks this API.";
+/** Consecutive `network` errors before we stop retrying and surface a fatal
+ * error. Brave produces these forever, so silent auto-restart would leave the
+ * mic looking "on" while capturing nothing — the original bug. */
+const NETWORK_RETRY_LIMIT = 2;
 const NO_GET_USER_MEDIA_MSG = "This browser can't access the microphone.";
 const GENERIC_MIC_MSG = "Could not access the microphone.";
 const SILENCE_WARNING_MS = 10_000;
@@ -50,6 +63,36 @@ function mapGetUserMediaError(err: unknown): string {
  * which needs to know this before offering "Record my voice" at all. */
 export function isSpeechRecognitionSupported(): boolean {
   return Boolean(window.SpeechRecognition ?? window.webkitSpeechRecognition);
+}
+
+/** Brave exposes `navigator.brave.isBrave()`. It's the only reliable signal:
+ * Brave's UA is indistinguishable from Chrome's on purpose. Async, so callers
+ * cache the answer. Resolves false for every other browser. */
+export async function isBraveBrowser(): Promise<boolean> {
+  const brave = (navigator as { brave?: { isBrave?: () => Promise<boolean> } }).brave;
+  if (!brave?.isBrave) return false;
+  try {
+    return await brave.isBrave();
+  } catch {
+    return false;
+  }
+}
+
+/** Pre-flight for voice capture: is speech recognition actually going to work
+ * in this browser? Checks the API exists AND that we aren't in a browser known
+ * to stub it out. The gate calls this before offering "Record my voice" so the
+ * user learns the truth before the clock starts, not after a silent session. */
+export async function checkSpeechAvailability(): Promise<
+  { ok: true } | { ok: false; message: string }
+> {
+  if (!isSpeechRecognitionSupported()) {
+    return {
+      ok: false,
+      message: "This browser has no speech recognition (Chrome and Edge do; Firefox and Safari don't).",
+    };
+  }
+  if (await isBraveBrowser()) return { ok: false, message: BRAVE_MSG };
+  return { ok: true };
 }
 
 /**
@@ -123,6 +166,24 @@ export function useSpeechRecognition(
   const onFinalSegmentRef = useRef(onFinalSegment);
   onFinalSegmentRef.current = onFinalSegment;
 
+  // Brave stubs the API out: detection passes, every session then dies with a
+  // `network` error. Resolve it once on mount and pre-empt the mic entirely.
+  useEffect(() => {
+    let cancelled = false;
+    void isBraveBrowser().then((brave) => {
+      if (brave && !cancelled) {
+        setStatus("unsupported");
+        setErrorMessage(BRAVE_MSG);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Counts consecutive `network` failures so we stop auto-restarting into a
+  // wall — otherwise the mic reads "on" while capturing nothing.
+  const networkFailuresRef = useRef(0);
   const silenceTimerRef = useRef<number | null>(null);
   const clearSilenceTimer = useCallback(() => {
     if (silenceTimerRef.current !== null) {
@@ -151,6 +212,7 @@ export function useSpeechRecognition(
       // (e.g. "network") flagged us a moment ago.
       setStatus("listening");
       setErrorMessage(null);
+      networkFailuresRef.current = 0; // a real result proves the backend works
 
       let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -169,10 +231,25 @@ export function useSpeechRecognition(
     };
 
     recognition.onerror = (event) => {
-      const message = mapRecognitionError(event.error);
+      let message = mapRecognitionError(event.error);
       if (message === null) return; // benign — onend will restart if needed
 
-      const isFatal = event.error === "not-allowed" || event.error === "service-not-allowed" || event.error === "audio-capture";
+      let isFatal =
+        event.error === "not-allowed" ||
+        event.error === "service-not-allowed" ||
+        event.error === "audio-capture";
+
+      // `network` is retryable once or twice (a real blip self-heals), but a
+      // browser that blocks the speech backend emits it forever. Give up
+      // rather than pretend to listen.
+      if (event.error === "network") {
+        networkFailuresRef.current += 1;
+        if (networkFailuresRef.current >= NETWORK_RETRY_LIMIT) {
+          isFatal = true;
+          message = NETWORK_FATAL_MSG;
+        }
+      }
+
       if (isFatal) {
         listeningRef.current = false;
         setListening(false);

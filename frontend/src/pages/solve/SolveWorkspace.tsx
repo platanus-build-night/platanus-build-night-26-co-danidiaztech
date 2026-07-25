@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, ApiError } from "../../lib/api";
-import type { ProblemDetail, RunResult, SubmitResult } from "../../lib/types";
-import { Button, PageHeader, ThemeToggle } from "../../components/ui";
+import type { CustomRunResult, ProblemDetail, RunResult, SubmitResult } from "../../lib/types";
+import { Button, PageHeader, SplitPane, ThemeToggle } from "../../components/ui";
 import { StatementPanel } from "./components/StatementPanel";
 import { CodeEditor } from "./components/CodeEditor";
 import { DrawNotesPanel } from "./components/DrawNotesPanel";
 import { BottomBar } from "./components/BottomBar";
 import { JudgeResultsPanel } from "./components/JudgeResultsPanel";
+import { CustomTestPanel } from "./components/CustomTestPanel";
 import { useEventRecorder } from "./hooks/useEventRecorder";
 import { useCodeSnapRecorder, useDebouncedSnap } from "./hooks/useThrottledSnap";
 import { useSpeechRecognition } from "./hooks/useSpeechRecognition";
@@ -15,7 +16,7 @@ import { useAppTheme } from "./hooks/useAppTheme";
 import { useElapsedTime } from "./hooks/useElapsedTime";
 import { STARTER_TEMPLATE, type DrawScene, type Language } from "./types";
 
-type RightTab = "code" | "draw";
+type RightTab = "code" | "draw" | "custom";
 type ResultsMode = "run" | "submit" | null;
 
 interface SolveWorkspaceProps {
@@ -51,6 +52,15 @@ export function SolveWorkspace({ problem, sessionId, autoStartMic }: SolveWorksp
   const [runResults, setRunResults] = useState<RunResult[] | null>(null);
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
   const [running, setRunning] = useState(false);
+
+  // Scratchpad state lives here (not in CustomTestPanel) so the input survives
+  // tab switches — losing hand-typed stdin on a tab change would be maddening.
+  const [customStdin, setCustomStdin] = useState("");
+  const [customExpected, setCustomExpected] = useState("");
+  const [customResult, setCustomResult] = useState<CustomRunResult | null>(null);
+  const [customRunning, setCustomRunning] = useState(false);
+  const [customError, setCustomError] = useState<string | null>(null);
+
   const [submitting, setSubmitting] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -105,6 +115,30 @@ export function SolveWorkspace({ problem, sessionId, autoStartMic }: SolveWorksp
     }
   }, [problem.id, language, code, record]);
 
+  const handleCustomRun = useCallback(async () => {
+    setCustomRunning(true);
+    setCustomError(null);
+    try {
+      const result = await api.runCustom(problem.id, language, code, customStdin, customExpected);
+      setCustomResult(result);
+      // Recorded as its own event kind: hand-made tests are a distinct
+      // debugging behaviour from judging, and the analysis should be able to
+      // tell "probed with own input" apart from "fired at the judge".
+      record("custom_run", { language, verdict: result.verdict, stdin_chars: customStdin.length });
+    } catch (e) {
+      setCustomError(e instanceof ApiError ? e.message : "Custom run failed");
+    } finally {
+      setCustomRunning(false);
+    }
+  }, [problem.id, language, code, customStdin, customExpected, record]);
+
+  const handleLoadSample = useCallback(() => {
+    const first = problem.samples?.[0];
+    if (!first) return;
+    setCustomStdin(first.input);
+    setCustomExpected(first.output);
+  }, [problem.samples]);
+
   const handleSubmit = useCallback(async () => {
     setSubmitting(true);
     setActionError(null);
@@ -134,7 +168,10 @@ export function SolveWorkspace({ problem, sessionId, autoStartMic }: SolveWorksp
   }, [sessionId, flush, navigate]);
 
   return (
-    <div className="mx-auto flex h-screen max-w-7xl flex-col px-6">
+    // Wider than the rest of the app on purpose: this is the working screen and
+    // the editor benefits from every pixel. Capped so lines don't sprawl on
+    // ultrawide displays.
+    <div className="mx-auto flex h-screen max-w-[1800px] flex-col px-6">
       <PageHeader
         title={problem.title}
         subtitle={<Link to="/" className="hover:text-accent">&larr; Back to problems</Link>}
@@ -143,50 +180,85 @@ export function SolveWorkspace({ problem, sessionId, autoStartMic }: SolveWorksp
 
       {actionError && <p className="mb-2 shrink-0 text-sm text-danger">{actionError}</p>}
 
-      <div className="grid min-h-0 flex-1 grid-rows-1 grid-cols-1 gap-4 pb-4 lg:grid-cols-2">
-        <div className="min-h-0">
-          <StatementPanel problem={problem} />
-        </div>
-
-        <div className="flex min-h-0 flex-col gap-3">
-          <div className="flex shrink-0 gap-1 rounded-lg border border-border bg-surface-alt p-1">
-            <Button
-              variant={rightTab === "code" ? "primary" : "ghost"}
-              size="sm"
-              className="flex-1"
-              onClick={() => setRightTab("code")}
-            >
-              Code
-            </Button>
-            <Button
-              variant={rightTab === "draw" ? "primary" : "ghost"}
-              size="sm"
-              className="flex-1"
-              onClick={() => setRightTab("draw")}
-            >
-              Draw + Notes
-            </Button>
+      <SplitPane
+        storageKey="trainer-solve-split"
+        defaultLeftPct={38}
+        minLeftPct={20}
+        maxLeftPct={68}
+        left={
+          <div className="h-full min-h-0 pb-4 pr-2">
+            <StatementPanel problem={problem} />
           </div>
+        }
+        right={
+          <div className="flex h-full min-h-0 flex-col gap-3 pb-4 pl-2">
+            <div className="flex shrink-0 gap-1 rounded-lg border border-border bg-surface-alt p-1">
+              <Button
+                variant={rightTab === "code" ? "primary" : "ghost"}
+                size="sm"
+                className="flex-1"
+                onClick={() => setRightTab("code")}
+              >
+                Code
+              </Button>
+              <Button
+                variant={rightTab === "custom" ? "primary" : "ghost"}
+                size="sm"
+                className="flex-1"
+                onClick={() => setRightTab("custom")}
+              >
+                Custom test
+              </Button>
+              <Button
+                variant={rightTab === "draw" ? "primary" : "ghost"}
+                size="sm"
+                className="flex-1"
+                onClick={() => setRightTab("draw")}
+              >
+                Draw + Notes
+              </Button>
+            </div>
 
-          <div className="min-h-0 flex-1">
-            {rightTab === "code" ? (
-              <CodeEditor
-                language={language}
-                code={code}
-                onLanguageChange={handleLanguageChange}
-                onCodeChange={(next) => setCodeByLanguage((prev) => ({ ...prev, [language]: next }))}
-              />
-            ) : (
-              <DrawNotesPanel
-                theme={appTheme}
-                notes={notes}
-                onNotesChange={setNotes}
-                onSceneChange={setDrawScene}
-              />
-            )}
+            {/* All three panes stay mounted and are hidden with CSS rather than
+                unmounted: remounting Monaco/Excalidraw on every tab switch
+                loses cursor position, undo history and scroll — and costs a
+                visible re-layout. */}
+            <div className="relative min-h-0 flex-1">
+              <div className={`absolute inset-0 ${rightTab === "code" ? "" : "hidden"}`}>
+                <CodeEditor
+                  language={language}
+                  code={code}
+                  onLanguageChange={handleLanguageChange}
+                  onCodeChange={(next) =>
+                    setCodeByLanguage((prev) => ({ ...prev, [language]: next }))
+                  }
+                />
+              </div>
+              <div className={`absolute inset-0 ${rightTab === "custom" ? "" : "hidden"}`}>
+                <CustomTestPanel
+                  stdin={customStdin}
+                  expected={customExpected}
+                  onStdinChange={setCustomStdin}
+                  onExpectedChange={setCustomExpected}
+                  onRun={handleCustomRun}
+                  running={customRunning}
+                  result={customResult}
+                  error={customError}
+                  onLoadSample={problem.samples?.length ? handleLoadSample : undefined}
+                />
+              </div>
+              <div className={`absolute inset-0 ${rightTab === "draw" ? "" : "hidden"}`}>
+                <DrawNotesPanel
+                  theme={appTheme}
+                  notes={notes}
+                  onNotesChange={setNotes}
+                  onSceneChange={setDrawScene}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {resultsMode && (
         <div className="h-64 shrink-0 pb-4">

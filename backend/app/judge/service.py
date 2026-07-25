@@ -178,6 +178,52 @@ def run_samples(problem: Any, language: str, code: str) -> list[dict[str, Any]]:
     ]
 
 
+def run_custom(problem: Any, language: str, code: str, stdin: str, expected: str | None) -> dict[str, Any]:
+    """Run `code` once against a hand-written `stdin`.
+
+    This is the scratchpad path, not the judge path, so it reports what a
+    person debugging actually needs and `/run` deliberately hides: **stderr**
+    (the Python traceback / C++ runtime message that explains an RE), the exit
+    code, and the wall time. `expected` is optional — with it you get a real
+    AC/WA verdict, without it the run is graded only on whether it completed
+    ("OK"), because "wrong answer" is meaningless when no answer was declared.
+    """
+    ok, compile_err = _compile_if_needed(language, code)
+    if not ok:
+        return {
+            "verdict": "CE",
+            "time_ms": 0,
+            "stdout": "",
+            "stderr": "",
+            "expected": expected,
+            "compile_error": compile_err,
+            "exit_code": None,
+        }
+
+    result = core.execute(language, code, stdin, problem.time_limit_ms, problem.memory_limit_mb)
+
+    if result["timed_out"]:
+        verdict = "TLE"
+    elif result["returncode"] != 0:
+        verdict = "RE"
+    elif expected is None or not expected.strip():
+        verdict = "OK"  # ran clean; nothing to compare against
+    else:
+        verdict = "AC" if core.compare_output(result["stdout"], expected) else "WA"
+
+    return {
+        "verdict": verdict,
+        "time_ms": result["time_ms"],
+        "stdout": result["stdout"],
+        # Surfaced on every non-clean outcome, not just RE: a program can exit 0
+        # after printing a warning, and that warning is often the whole clue.
+        "stderr": result["stderr"][:STDERR_EXCERPT_CHARS],
+        "expected": expected,
+        "compile_error": None,
+        "exit_code": result["returncode"],
+    }
+
+
 def _load_tests(db: Session, problem: Any) -> list[dict[str, str]]:
     from app.models import TestCase  # local import: avoid a hard app.models
     # dependency for anyone importing this module outside the app (e.g. a

@@ -76,7 +76,10 @@ export type EventKind =
   | "draw_snap"
   | "note_snap"
   | "run"
-  | "submit";
+  | "submit"
+  /** A run against hand-written stdin — probing behaviour, distinct from
+   * firing at the judge. */
+  | "custom_run";
 
 export interface EventIn {
   t_ms: number;
@@ -93,6 +96,18 @@ export interface RunResult {
 }
 
 export type Verdict = "AC" | "WA" | "TLE" | "RE" | "CE";
+
+/** Result of running against hand-written stdin. Carries `stderr`/`exit_code`
+ * (which the judge paths omit) and adds "OK" — ran clean, nothing to compare. */
+export interface CustomRunResult {
+  verdict: Verdict | "OK";
+  time_ms: number;
+  stdout: string;
+  stderr: string;
+  expected: string | null;
+  compile_error: string | null;
+  exit_code: number | null;
+}
 
 export interface SubmitResult {
   verdict: Verdict;

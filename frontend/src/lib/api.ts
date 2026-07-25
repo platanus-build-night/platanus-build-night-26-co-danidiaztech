@@ -6,6 +6,7 @@ import type {
   ProblemMeta,
   ProfileOut,
   Recommendation,
+  CustomRunResult,
   RunResult,
   SessionAnalysisOut,
   SessionCreated,
@@ -100,6 +101,18 @@ export const api = {
     request<RunResult[]>("/run", {
       method: "POST",
       body: JSON.stringify({ problem_id, language, code }),
+    }),
+
+  runCustom: (
+    problem_id: number,
+    language: string,
+    code: string,
+    stdin: string,
+    expected?: string
+  ) =>
+    request<CustomRunResult>("/run-custom", {
+      method: "POST",
+      body: JSON.stringify({ problem_id, language, code, stdin, expected: expected || null }),
     }),
 
   submit: (problem_id: number, language: string, code: string, session_id?: number) =>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ProblemMeta } from "../../lib/types";
 import { Badge, Button, Card, Spinner } from "../../components/ui";
 import {
+  checkSpeechAvailability,
   isSpeechRecognitionSupported,
   requestMicAccess,
 } from "./hooks/useSpeechRecognition";
@@ -37,6 +38,16 @@ export function PreflightGate({ problemMeta, onStart, starting, startError }: Pr
   const handleRecord = async () => {
     setMicCheck("checking");
     setMicError(null);
+
+    // Two independent things can break voice capture, so check both before
+    // the clock starts: the browser's speech backend (Brave blocks it
+    // outright) and the mic device/permission itself.
+    const speech = await checkSpeechAvailability();
+    if (!speech.ok) {
+      setMicCheck("error");
+      setMicError(speech.message);
+      return;
+    }
     const access = await requestMicAccess();
     if (!access.ok) {
       setMicCheck("error");

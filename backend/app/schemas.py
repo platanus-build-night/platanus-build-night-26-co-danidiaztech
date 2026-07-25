@@ -129,6 +129,26 @@ class RunResult(BaseModel):
     compile_error: Optional[str] = None
 
 
+class CustomRunRequest(BaseModel):
+    problem_id: int
+    language: str
+    code: str
+    stdin: str
+    # Optional: when omitted there is nothing to be "wrong" against, so the
+    # run is graded OK/RE/TLE/CE rather than AC/WA.
+    expected: Optional[str] = None
+
+
+class CustomRunResult(BaseModel):
+    verdict: str
+    time_ms: int
+    stdout: str
+    stderr: str
+    expected: Optional[str] = None
+    compile_error: Optional[str] = None
+    exit_code: Optional[int] = None
+
+
 class SubmitRequest(BaseModel):
     problem_id: int
     language: str

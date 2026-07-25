@@ -6,3 +6,4 @@ export * from "./Spinner";
 export * from "./EmptyState";
 export * from "./PageHeader";
 export * from "./ThemeToggle";
+export * from "./SplitPane";

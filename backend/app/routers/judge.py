@@ -13,7 +13,14 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.judge import service as judge_service
 from app.models import Problem
-from app.schemas import RunRequest, RunResult, SubmitRequest, SubmitResult
+from app.schemas import (
+    CustomRunRequest,
+    CustomRunResult,
+    RunRequest,
+    RunResult,
+    SubmitRequest,
+    SubmitResult,
+)
 
 router = APIRouter(tags=["judge"])
 
@@ -24,6 +31,21 @@ def run_code(payload: RunRequest, db: Session = Depends(get_db)) -> list[dict]:
     if problem is None:
         raise HTTPException(status_code=404, detail="problem not found")
     return judge_service.run_samples(problem, payload.language, payload.code)
+
+
+@router.post("/run-custom", response_model=CustomRunResult)
+def run_custom_code(payload: CustomRunRequest, db: Session = Depends(get_db)) -> dict:
+    """Run the user's code against their own stdin — the scratchpad path.
+
+    Kept separate from /run because it reports stderr and the exit code (what
+    you need while debugging) rather than a per-sample verdict table.
+    """
+    problem = db.get(Problem, payload.problem_id)
+    if problem is None:
+        raise HTTPException(status_code=404, detail="problem not found")
+    return judge_service.run_custom(
+        problem, payload.language, payload.code, payload.stdin, payload.expected
+    )
 
 
 @router.post("/submit", response_model=SubmitResult)
