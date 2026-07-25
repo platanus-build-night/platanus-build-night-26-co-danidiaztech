@@ -64,7 +64,11 @@ export function ReviewPage() {
   }, [sessionId]);
 
   return (
-    <div className="mx-auto flex h-full max-w-[1500px] flex-col px-6">
+    // h-screen (not h-full): the app shell only sets min-height on its root,
+    // so a percentage height here would resolve against an indefinite
+    // ancestor height. A viewport unit gives this page a definite height
+    // regardless, which the flex chain below needs to constrain the player.
+    <div className="mx-auto flex h-screen max-w-[1500px] flex-col px-6">
       <PageHeader
         title={problem ? `Review — ${problem.title}` : "Review"}
         subtitle={<Link to="/" className="hover:text-accent">&larr; Back to problems</Link>}
@@ -80,8 +84,8 @@ export function ReviewPage() {
       )}
 
       {session && problem && (
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 pb-6 lg:grid-cols-[360px_1fr]">
-          <div className="min-h-0 overflow-y-auto pr-1">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 pb-6 lg:flex-row">
+          <div className="min-h-0 overflow-y-auto pr-1 lg:w-[360px] lg:shrink-0">
             <SummaryColumn
               problem={problem}
               session={session}
@@ -92,9 +96,11 @@ export function ReviewPage() {
             />
           </div>
 
-          <Panel title="Timeframe player" bodyClassName="flex min-h-0 flex-1 flex-col">
-            <TimeframePlayer session={session} analysis={analysis} />
-          </Panel>
+          <div className="min-h-0 flex-1">
+            <Panel title="Timeframe player" className="h-full" bodyClassName="flex min-h-0 flex-1 flex-col">
+              <TimeframePlayer session={session} analysis={analysis} />
+            </Panel>
+          </div>
         </div>
       )}
     </div>

@@ -134,3 +134,17 @@ class Profile(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
     data: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+
+
+class Settings(Base):
+    """Singleton (id=1) AI provider settings.
+
+    data = {provider: "api"|"plan"|"mock", api_key?, oauth_token?, model}.
+    Plaintext is acceptable here (single-user, no-auth, local DB); credentials
+    are never returned in full by the API — see app/routers/settings.py.
+    """
+
+    __tablename__ = "settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    data: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)

@@ -1,9 +1,9 @@
-"""/run and /submit — stub endpoints delegating to app.judge.service (Agent E
-fills in the real judge; app.judge.core (Agent B) is the pure runner).
+"""/run and /submit — delegate to app.judge.service (Agent E; app.judge.core,
+Agent B, is the pure sandboxed runner underneath).
 
-Submissions ARE persisted to the DB (the submissions table is part of the
-real, functional CRUD surface) even though the verdict itself is fixture data
-until Agent B/E land the real judge.
+`submit()` in the service layer owns persistence: it writes the Submission
+row itself, emits a `submit` session event when a session_id is given, and
+nudges the rolling skill profile — see app/judge/service.py.
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.judge import service as judge_service
-from app.models import Problem, Submission
+from app.models import Problem
 from app.schemas import RunRequest, RunResult, SubmitRequest, SubmitResult
 
 router = APIRouter(tags=["judge"])
@@ -32,18 +32,6 @@ def submit_code(payload: SubmitRequest, db: Session = Depends(get_db)) -> dict:
     if problem is None:
         raise HTTPException(status_code=404, detail="problem not found")
 
-    result = judge_service.submit(problem, payload.language, payload.code)
-
-    submission = Submission(
-        session_id=payload.session_id,
-        problem_id=payload.problem_id,
-        language=payload.language,
-        code=payload.code,
-        verdict=result["verdict"],
-        time_ms=result["time_ms"],
-        per_test=result["per_test"],
+    return judge_service.submit(
+        db, problem, payload.language, payload.code, session_id=payload.session_id
     )
-    db.add(submission)
-    db.commit()
-
-    return result

@@ -169,6 +169,18 @@ def _compile_cpp(code: str) -> tuple[str | None, str]:
     return str(binary_path), ""
 
 
+def compile_cpp(code: str) -> tuple[str | None, str]:
+    """Public wrapper around the content-hash-cached cpp compiler (Agent E
+    extension point). Lets callers compile a submission's source ONCE up
+    front — before fanning per-test runs out across a ProcessPoolExecutor —
+    so (a) CE can be surfaced immediately without running any tests, and
+    (b) parallel workers never race to compile the same binary (they just
+    hit the on-disk cache `_compile_cpp` already maintains). Returns
+    (binary_path, error); error is the raw compiler stderr on failure.
+    """
+    return _compile_cpp(code)
+
+
 def _run_python(code: str, stdin: str, time_limit_ms: int, memory_limit_mb: int) -> ExecResult:
     digest = hashlib.sha256(code.encode("utf-8", errors="replace")).hexdigest()[:24]
     src_path = _CACHE_DIR / f"py_{digest}.py"

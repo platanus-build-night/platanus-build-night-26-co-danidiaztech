@@ -20,6 +20,24 @@ and name the ONE thing that, if trained, would most improve their next solve.
 ## What you are producing
 A single JSON object. No prose outside it, no markdown fences, no commentary.
 
+## Output shape — use exactly these keys, exactly this casing
+{
+  "summary": "1-2 sentences",
+  "phases": [{"label": "reading|thinking|coding|debugging|stuck", "startSec": 0, "endSec": 90, "note": "one clause"}],
+  "markers": [{"kind": "aha|hesitation|wrong-turn", "atSec": 392, "quote": "verbatim transcript substring, or empty string", "note": "one clause"}],
+  "ahaMomentSec": 392,
+  "firstCorrectCodeSec": 485,
+  "ahaGapSeconds": 93,
+  "bottleneck": "one sentence",
+  "strengths": ["plain string", "plain string"],
+  "drills": [{"title": "string", "why": "string"}],
+  "editorialGap": {"missedInsight": "string", "fasterPath": "string", "profileAdvice": "string"}
+}
+Every key above is required. `startSec`/`endSec`/`atSec` are integer seconds. \
+`strengths` is an array of plain strings — not objects. `label` and `kind` must be \
+one of the listed values. Only `ahaMomentSec`, `firstCorrectCodeSec` and \
+`ahaGapSeconds` may be null. Add no other keys.
+
 ## Grounding rules — these are hard constraints
 1. Every timestamp you emit must come from the evidence: transcript segment times, \
 code-snapshot times, run/submit times, or idle-gap boundaries in the features. Never \
@@ -92,15 +110,22 @@ def build_system_prompt() -> str:
 def build_user_prompt(ctx: dict[str, Any]) -> str:
     """Render the assembled context into the single user turn."""
     problem = ctx.get("problem", {})
+    features = ctx.get("features", {}) or {}
+    # Outcomes and churn get their own blocks; don't show the model two copies
+    # (possibly computed two different ways) of the same numbers.
+    trimmed = {k: v for k, v in features.items() if k != "run_submit_timeline"}
     parts = [
         render_block("session", ctx.get("session", {})),
         render_block("problem_meta", {k: problem.get(k) for k in ("title", "tags", "rating")}),
         render_block("problem_statement", problem.get("statement_md") or "(not available)"),
         render_block("editorial", problem.get("editorial_md") or "(no editorial available)"),
-        render_block("deterministic_features", ctx.get("features", {})),
+        render_block("deterministic_features", trimmed),
         render_block("run_submit_timeline", ctx.get("outcomes", [])),
         render_block("transcript", _render_transcript(ctx.get("transcript", []))),
-        render_block("code_evolution", _render_code(ctx.get("code_evolution", {}))),
+        render_block(
+            "code_evolution",
+            _render_code(ctx.get("code_evolution", {}), churn="churn_per_min" not in features),
+        ),
         render_block("rolling_profile", ctx.get("profile", {})),
     ]
     return (
@@ -116,16 +141,18 @@ def _render_transcript(segments: list[dict[str, Any]]) -> str:
     return "\n".join(f"[{s['sec']}s] {s['text']}" for s in segments)
 
 
-def _render_code(eco: dict[str, Any]) -> str:
+def _render_code(eco: dict[str, Any], churn: bool = True) -> str:
     if not eco.get("snapshots"):
         return "(no code snapshots captured)"
     lines: list[str] = []
     sizes = ", ".join(f"{s['sec']}s:{s['chars']}c/{s['lines']}L" for s in eco["snapshots"])
     lines.append(f"snapshot sizes: {sizes}")
-    churn = ", ".join(
-        f"min{c['minute']}: +{c['added']}/-{c['deleted']}" for c in eco.get("churn_per_min", [])
-    )
-    lines.append(f"churn per minute (chars): {churn or 'n/a'}")
+    if churn:
+        per_min = ", ".join(
+            f"min{c['minute']}: +{c['added']}/-{c['deleted']}"
+            for c in eco.get("churn_per_min", [])
+        )
+        lines.append(f"churn per minute (chars): {per_min or 'n/a'}")
     first = eco.get("first_snapshot") or {}
     if first.get("code"):
         lines.append(f"\nfirst code written (t={first['sec']}s):\n{first['code']}")

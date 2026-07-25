@@ -45,6 +45,6 @@ export const PHASE_COLORS: Record<string, string> = {
 
 export const MARKER_GLYPH: Record<string, string> = {
   aha: "⚡", // lightning bolt
-  hesitation: "⏸", // pause
+  hesitation: "‖", // double vertical bar (avoids tofu for U+23F8 in some fonts)
   "wrong-turn": "↩", // arrow hook left
 };

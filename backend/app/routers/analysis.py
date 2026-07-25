@@ -1,17 +1,16 @@
-"""/sessions/{id}/analyze and /profile — delegate to app.features (Agent E),
-app.analysis (Agent F), and app.engine.profile (Agent E). Persists the
-Analysis row and recomputes the rolling profile.
+"""/sessions/{id}/analyze and /profile.
+
+The analyze flow (features -> provider -> validate -> persist -> profile hook)
+lives in app.analysis.service; this router is the thin HTTP edge.
 """
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.analysis.analyze import analyze_session
+from app.analysis.service import SessionNotFound, run_analysis
 from app.db import get_db
-from app.engine.profile import get_or_create_profile, recompute_profile
-from app.features.extract import extract_features
-from app.models import Analysis, Event, SessionModel
+from app.engine.profile import get_or_create_profile
 from app.schemas import AnalysisResult, ProfileOut
 
 router = APIRouter(tags=["analysis"])
@@ -19,28 +18,10 @@ router = APIRouter(tags=["analysis"])
 
 @router.post("/sessions/{session_id}/analyze", response_model=AnalysisResult)
 def analyze(session_id: int, db: Session = Depends(get_db)) -> dict:
-    session = db.get(SessionModel, session_id)
-    if session is None:
-        raise HTTPException(status_code=404, detail="session not found")
-
-    events = [
-        {"t_ms": e.t_ms, "kind": e.kind, "payload": e.payload} for e in session.events
-    ]
-    features = extract_features(events)
-    profile = get_or_create_profile(db)
-    result = analyze_session(session, events, session.problem, features, profile.data)
-
-    existing = db.query(Analysis).filter(Analysis.session_id == session_id).one_or_none()
-    if existing is None:
-        db.add(Analysis(session_id=session_id, features=features, result=result))
-    else:
-        existing.features = features
-        existing.result = result
-    db.commit()
-
-    recompute_profile(db, session, result)
-
-    return result
+    try:
+        return run_analysis(db, session_id)
+    except SessionNotFound:
+        raise HTTPException(status_code=404, detail="session not found") from None
 
 
 @router.get("/profile", response_model=ProfileOut)

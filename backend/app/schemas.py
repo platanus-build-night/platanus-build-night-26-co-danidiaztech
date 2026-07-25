@@ -163,3 +163,27 @@ class AnalysisResult(BaseModel):
 
 class ProfileOut(BaseModel):
     data: dict[str, Any]
+
+
+# ----------------------------------------------------------------- Settings --
+
+class SettingsOut(BaseModel):
+    provider: str  # api|plan|mock
+    model: str
+    api_key_masked: Optional[str] = None
+    oauth_token_masked: Optional[str] = None
+    status: str
+
+
+class SettingsUpdate(BaseModel):
+    provider: Optional[str] = None
+    api_key: Optional[str] = None
+    oauth_token: Optional[str] = None
+    model: Optional[str] = None
+
+
+class SettingsTestResult(BaseModel):
+    ok: bool
+    provider: str
+    model: Optional[str] = None
+    error: Optional[str] = None
